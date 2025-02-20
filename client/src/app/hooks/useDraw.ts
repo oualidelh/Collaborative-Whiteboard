@@ -56,7 +56,7 @@ export const useDraw = (
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("mouseup", mouseUpHandler);
     };
-  }, [onDraw, mouseDown]); // ✅ Remove `canvasRef` from dependencies
+  }, [onDraw, mouseDown, canvasRef]); // ✅ Remove `canvasRef` from dependencies
 
   return { onMouseDown };
 };
