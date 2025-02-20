@@ -1,6 +1,7 @@
 type DrawLineProps = Draw & {
   color: string;
   tool: string | null;
+  strokeWidth: number;
 };
 
 export const drawLine = ({
@@ -9,10 +10,11 @@ export const drawLine = ({
   ctx,
   color,
   tool,
+  strokeWidth,
 }: DrawLineProps) => {
   const { x: currX, y: currY } = currentPoint;
   const lineColor = tool === "eraser" ? "#FFFFFF" : color;
-  const lineWidth = 5;
+  const lineWidth = strokeWidth;
 
   const startPoint = prevPoint ?? currentPoint;
   ctx.beginPath();
@@ -24,6 +26,6 @@ export const drawLine = ({
 
   ctx.fillStyle = lineColor;
   ctx.beginPath();
-  ctx.arc(startPoint.x, startPoint.y, 2, 0, 2 * Math.PI);
+  ctx.arc(currX, currY, lineWidth / 2, 0, 2 * Math.PI);
   ctx.fill();
 };

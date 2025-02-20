@@ -12,26 +12,39 @@ const HomePage = () => {
   const { onMouseDown } = useDraw(createLine, canvasRef);
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
   const [color, setColor] = useState("#000000");
+  const [strokeWidth, setStrokeWidth] = useState(2);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
 
     socket.on(
       "draw-line",
-      ({ prevPoint, currentPoint, color, tool }: DrawLineProps) => {
+      ({
+        prevPoint,
+        currentPoint,
+        color,
+        tool,
+        strokeWidth,
+      }: DrawLineProps) => {
         if (!ctx) return console.log("no ctx here");
-        drawLine({ prevPoint, currentPoint, ctx, color, tool });
+        drawLine({ prevPoint, currentPoint, ctx, color, tool, strokeWidth });
       }
     );
 
     return () => {
       socket.off("draw-line");
     };
-  }, [canvasRef]);
+  }, [canvasRef, strokeWidth]);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
-    socket.emit("draw-line", { prevPoint, currentPoint, color, tool });
-    drawLine({ prevPoint, currentPoint, ctx, color, tool });
+    socket.emit("draw-line", {
+      prevPoint,
+      currentPoint,
+      color,
+      tool,
+      strokeWidth,
+    });
+    drawLine({ prevPoint, currentPoint, ctx, color, tool, strokeWidth });
   }
 
   return (
@@ -41,6 +54,8 @@ const HomePage = () => {
         onToolChange={setTool}
         color={color}
         onColorChange={setColor}
+        strokeWidth={strokeWidth}
+        onStrokeWidthChange={setStrokeWidth}
       />
       <div className="w-[750px] relative h-[750px]">
         <canvas

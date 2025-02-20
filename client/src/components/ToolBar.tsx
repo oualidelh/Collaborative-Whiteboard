@@ -1,12 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Pencil, Eraser } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Slider } from "./ui/slider";
 
 interface ToolbarProps {
   selectedTool: "pen" | "eraser";
   onToolChange: (tool: "pen" | "eraser") => void;
   color: string;
   onColorChange: (color: string) => void;
+  strokeWidth: number;
+  onStrokeWidthChange: (width: number) => void;
 }
 
 export const ToolBar = ({
@@ -14,6 +17,8 @@ export const ToolBar = ({
   onToolChange,
   color,
   onColorChange,
+  strokeWidth,
+  onStrokeWidthChange,
 }: ToolbarProps) => {
   return (
     <div className="animate-slideFadeInLeft flex flex-wrap items-center gap-4 p-3 my-4 bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
@@ -61,6 +66,19 @@ export const ToolBar = ({
       </div>
 
       <div className="h-6 w-px bg-cream-200" />
+      <div className="flex items-center gap-4 flex-1 max-w-xs">
+        <span className="text-sm text-charcoal-700 whitespace-nowrap">
+          Stroke Width
+        </span>
+        <Slider
+          value={[strokeWidth]}
+          onValueChange={(value) => onStrokeWidthChange(value[0])}
+          min={1}
+          max={20}
+          step={1}
+          className="w-32 hover:cursor-pointer"
+        />
+      </div>
 
       <div className="h-6 w-px bg-cream-200 hidden md:block" />
     </div>
