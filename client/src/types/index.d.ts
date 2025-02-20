@@ -10,4 +10,5 @@ type DrawLineProps = {
   prevPoint: Point | null;
   currentPoint: Point;
   color: string;
+  tool: string | null;
 };

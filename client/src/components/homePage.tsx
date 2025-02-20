@@ -1,23 +1,26 @@
 "use client";
 import { useDraw } from "@/app/hooks/useDraw";
 import { drawLine } from "@/utils/drawLines";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { ToolBar } from "./ToolBar";
 
 const socket = io("http://localhost:5000");
 
 const HomePage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { onMouseDown } = useDraw(createLine, canvasRef);
+  const [tool, setTool] = useState<"pen" | "eraser">("pen");
+  const [color, setColor] = useState("#000000");
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
 
     socket.on(
       "draw-line",
-      ({ prevPoint, currentPoint, color }: DrawLineProps) => {
+      ({ prevPoint, currentPoint, color, tool }: DrawLineProps) => {
         if (!ctx) return console.log("no ctx here");
-        drawLine({ prevPoint, currentPoint, ctx, color });
+        drawLine({ prevPoint, currentPoint, ctx, color, tool });
       }
     );
 
@@ -27,13 +30,18 @@ const HomePage = () => {
   }, [canvasRef]);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
-    const color = "#000000";
-    socket.emit("draw-line", { prevPoint, currentPoint, color });
-    drawLine({ prevPoint, currentPoint, ctx, color });
+    socket.emit("draw-line", { prevPoint, currentPoint, color, tool });
+    drawLine({ prevPoint, currentPoint, ctx, color, tool });
   }
 
   return (
-    <div className="flex relative w-full flex-col justify-center items-center">
+    <div className="flex relative w-full flex-col justify-center items-center gap-4 py-5">
+      <ToolBar
+        selectedTool={tool}
+        onToolChange={setTool}
+        color={color}
+        onColorChange={setColor}
+      />
       <div className="w-[750px] relative h-[750px]">
         <canvas
           ref={canvasRef}
