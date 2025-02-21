@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Pencil, Eraser } from "lucide-react";
+import { Pencil, Eraser, Trash2 } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Slider } from "./ui/slider";
 
@@ -10,6 +10,7 @@ interface ToolbarProps {
   onColorChange: (color: string) => void;
   strokeWidth: number;
   onStrokeWidthChange: (width: number) => void;
+  HandleClearCanvas: () => void;
 }
 
 export const ToolBar = ({
@@ -19,6 +20,7 @@ export const ToolBar = ({
   onColorChange,
   strokeWidth,
   onStrokeWidthChange,
+  HandleClearCanvas,
 }: ToolbarProps) => {
   return (
     <div className="animate-slideFadeInLeft flex flex-wrap items-center gap-4 p-3 my-4 bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
@@ -42,6 +44,17 @@ export const ToolBar = ({
             className="hover-lift w-9 h-9"
           >
             <Eraser className="h-4 w-4" />
+          </Button>
+        </Tooltip>
+
+        <Tooltip content="Clear Canvas (X)">
+          <Button
+            variant={"outline"}
+            size="icon"
+            onClick={() => HandleClearCanvas()}
+            className="hover-lift w-9 h-9"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </Tooltip>
       </div>

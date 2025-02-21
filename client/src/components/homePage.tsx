@@ -9,10 +9,14 @@ const socket = io("http://localhost:5000");
 
 const HomePage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { onMouseDown } = useDraw(createLine, canvasRef);
+  const { onMouseDown, clear } = useDraw(createLine, canvasRef);
   const [tool, setTool] = useState<"pen" | "eraser">("pen");
   const [color, setColor] = useState("#000000");
   const [strokeWidth, setStrokeWidth] = useState(2);
+
+  const HandleClearCanvas = () => {
+    socket.emit("clear");
+  };
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -31,10 +35,12 @@ const HomePage = () => {
       }
     );
 
+    socket.on("clear", clear);
+
     return () => {
       socket.off("draw-line");
     };
-  }, [canvasRef, strokeWidth]);
+  }, [canvasRef, strokeWidth, clear]);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
     socket.emit("draw-line", {
@@ -56,6 +62,7 @@ const HomePage = () => {
         onColorChange={setColor}
         strokeWidth={strokeWidth}
         onStrokeWidthChange={setStrokeWidth}
+        HandleClearCanvas={HandleClearCanvas}
       />
       <div className="w-[750px] relative h-[750px]">
         <canvas

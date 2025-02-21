@@ -34,6 +34,8 @@ io.on("connection", (socket) => {
       });
     }
   );
+
+  socket.on("clear", () => io.emit("clear"));
 });
 
 server.listen(5000, () => {
