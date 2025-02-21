@@ -11,4 +11,5 @@ type DrawLineProps = {
   currentPoint: Point;
   color: string;
   tool: string | null;
+  strokeWidth: number;
 };

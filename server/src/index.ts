@@ -17,21 +17,25 @@ type DrawLine = {
   currentPoint: Point;
   color: string;
   tool: string | null;
+  strokeWidth: number;
 };
 
 io.on("connection", (socket) => {
   console.log("connection");
   socket.on(
     "draw-line",
-    ({ prevPoint, currentPoint, color, tool }: DrawLine) => {
+    ({ prevPoint, currentPoint, color, tool, strokeWidth }: DrawLine) => {
       socket.broadcast.emit("draw-line", {
         prevPoint,
         currentPoint,
         color,
         tool,
+        strokeWidth,
       });
     }
   );
+
+  socket.on("clear", () => io.emit("clear"));
 });
 
 server.listen(5000, () => {
