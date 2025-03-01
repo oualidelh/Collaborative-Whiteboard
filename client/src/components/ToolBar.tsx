@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Pencil, Eraser, Trash2 } from "lucide-react";
+import { Pencil, Eraser, Trash2, Redo2, Undo2 } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Slider } from "./ui/slider";
 
@@ -11,6 +11,8 @@ interface ToolbarProps {
   strokeWidth: number;
   onStrokeWidthChange: (width: number) => void;
   HandleClearCanvas: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export const ToolBar = ({
@@ -21,6 +23,8 @@ export const ToolBar = ({
   strokeWidth,
   onStrokeWidthChange,
   HandleClearCanvas,
+  onUndo,
+  onRedo,
 }: ToolbarProps) => {
   return (
     <div className="animate-slideFadeInLeft flex flex-wrap items-center gap-4 p-3 my-4 bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
@@ -94,6 +98,29 @@ export const ToolBar = ({
       </div>
 
       <div className="h-6 w-px bg-cream-200 hidden md:block" />
+      <div className="flex items-center gap-2 ml-auto">
+        <Tooltip content="Undo (Ctrl+Z)">
+          <Button
+            variant="outline"
+            size="icon"
+            className="hover-lift w-9 h-9"
+            onClick={onUndo}
+          >
+            <Undo2 className="h-4 w-4" />
+          </Button>
+        </Tooltip>
+
+        <Tooltip content="Redo (Ctrl+Y)">
+          <Button
+            variant="outline"
+            size="icon"
+            className="hover-lift w-9 h-9"
+            onClick={onRedo}
+          >
+            <Redo2 className="h-4 w-4" />
+          </Button>
+        </Tooltip>
+      </div>
     </div>
   );
 };

@@ -10,6 +10,8 @@ const io = new Server(server, {
   },
 });
 
+const users = [];
+
 type Point = { x: number; y: number };
 
 type DrawLine = {
@@ -22,6 +24,31 @@ type DrawLine = {
 
 io.on("connection", (socket) => {
   console.log("connection");
+
+  socket.on("client-ready", () => {
+    socket.broadcast.emit("get-canvas-state");
+  });
+
+  socket.on("canvas-state", (state) => {
+    console.log("received canvas state");
+    socket.broadcast.emit("canvas-state-from-server", state);
+  });
+
+  socket.on("savedHistory", (state) => {
+    console.log("received canvas state");
+    socket.broadcast.emit("savedHistory-from-server", state);
+  });
+
+  socket.on("canvas-state-undo", (state) => {
+    console.log("received canvas undo");
+    console.log("the state undo", state);
+    socket.broadcast.emit("canvas-state-undo-from-server", state);
+  });
+
+  socket.on("canvas-state-redo", (state) => {
+    socket.broadcast.emit("canvas-state-redo-from-server", state);
+  });
+
   socket.on(
     "draw-line",
     ({ prevPoint, currentPoint, color, tool, strokeWidth }: DrawLine) => {

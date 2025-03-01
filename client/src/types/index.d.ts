@@ -13,3 +13,6 @@ type DrawLineProps = {
   tool: string | null;
   strokeWidth: number;
 };
+interface DrawingState {
+  imageData: ImageData | null;
+}
