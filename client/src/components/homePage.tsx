@@ -4,6 +4,7 @@ import { drawLine } from "@/utils/drawLines";
 import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { ToolBar } from "./ToolBar";
+import { convertToAbsolute } from "@/utils/convertToAbsolute";
 
 const socket = io("http://localhost:5000");
 
@@ -19,7 +20,10 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    const ctx = canvasRef.current?.getContext("2d");
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     socket.on(
       "draw-line",
@@ -30,8 +34,21 @@ const HomePage = () => {
         tool,
         strokeWidth,
       }: DrawLineProps) => {
-        if (!ctx) return console.log("no ctx here");
-        drawLine({ prevPoint, currentPoint, ctx, color, tool, strokeWidth });
+        // ✅ Use the utility function to convert points
+        const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
+          currentPoint,
+          prevPoint,
+          canvas
+        );
+
+        drawLine({
+          prevPoint: absPrevPoint,
+          currentPoint: absCurrentPoint,
+          ctx,
+          color,
+          tool,
+          strokeWidth,
+        });
       }
     );
 
@@ -43,6 +60,9 @@ const HomePage = () => {
   }, [canvasRef, strokeWidth, clear]);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     socket.emit("draw-line", {
       prevPoint,
       currentPoint,
@@ -50,7 +70,23 @@ const HomePage = () => {
       tool,
       strokeWidth,
     });
-    drawLine({ prevPoint, currentPoint, ctx, color, tool, strokeWidth });
+
+    // ✅ Use the utility function to convert points
+    const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
+      currentPoint,
+      prevPoint,
+      canvas
+    );
+
+    // Draw the line locally.
+    drawLine({
+      prevPoint: absPrevPoint,
+      currentPoint: absCurrentPoint,
+      ctx,
+      color,
+      tool,
+      strokeWidth,
+    });
   }
 
   return (
@@ -64,13 +100,19 @@ const HomePage = () => {
         onStrokeWidthChange={setStrokeWidth}
         HandleClearCanvas={HandleClearCanvas}
       />
-      <div className="w-[750px] relative h-[750px]">
+      <div
+        className="relative shadow-md rounded-lg 
+               w-[90vw] h-[90vw] max-w-[750px] max-h-[750px] 
+               sm:w-[600px] sm:h-[600px] 
+               md:w-[700px] md:h-[700px] 
+               lg:w-[750px] lg:h-[750px]"
+      >
         <canvas
           ref={canvasRef}
           width={750}
           height={750}
           onMouseDown={onMouseDown}
-          className="bg-white shadow-md rounded-lg"
+          className="w-full h-full bg-white rounded-lg"
         />
       </div>
     </div>

@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-
 export const useDraw = (
   onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void,
   canvasRef: React.RefObject<HTMLCanvasElement | null>
@@ -41,8 +40,8 @@ export const useDraw = (
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
 
       return { x, y };
     };
@@ -55,18 +54,18 @@ export const useDraw = (
       prevPoint.current = null;
     };
 
-    // ✅ Use the stored `canvas` reference
+    // ✅ Use the stored canvas reference
     canvas.addEventListener("mousemove", mouseMoveHandler);
     canvas.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("mouseup", mouseUpHandler);
 
     return () => {
-      // ✅ Cleanup should use the stored `canvas`
+      // ✅ Cleanup should use the stored canvas
       canvas.removeEventListener("mousemove", mouseMoveHandler);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("mouseup", mouseUpHandler);
     };
-  }, [onDraw, mouseDown, canvasRef]); // ✅ Remove `canvasRef` from dependencies
+  }, [onDraw, mouseDown, canvasRef]); // ✅ Remove canvasRef from dependencies
 
   return { onMouseDown, clear };
 };
