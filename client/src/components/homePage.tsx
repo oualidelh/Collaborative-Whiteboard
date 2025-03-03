@@ -25,6 +25,23 @@ const HomePage = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    socket.emit("client-ready");
+
+    socket.on("get-canvas-state", () => {
+      if (!canvasRef.current?.toDataURL()) return;
+      console.log("sending canvas state");
+      socket.emit("canvas-state", canvasRef.current.toDataURL());
+    });
+
+    socket.on("canvas-state-from-server", (state: string) => {
+      console.log("I received the state");
+      const img = new Image();
+      img.src = state;
+      img.onload = () => {
+        ctx?.drawImage(img, 0, 0);
+      };
+    });
+
     socket.on(
       "draw-line",
       ({
