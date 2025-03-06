@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { ToolBar } from "./ToolBar";
 import { convertToAbsolute } from "@/utils/convertToAbsolute";
+import SignOut from "./SignOut";
 
 const socket = io("http://localhost:5000");
 
@@ -118,7 +119,7 @@ const HomePage = () => {
         HandleClearCanvas={HandleClearCanvas}
       />
       <div
-        className="relative shadow-md rounded-lg 
+        className="relative animate-slideFadeInBottom shadow-md rounded-lg 
                w-[90vw] h-[90vw] max-w-[750px] max-h-[750px] 
                sm:w-[600px] sm:h-[600px] 
                md:w-[700px] md:h-[700px] 
@@ -132,6 +133,7 @@ const HomePage = () => {
           className="w-full h-full bg-white rounded-lg"
         />
       </div>
+      <SignOut />
     </div>
   );
 };
