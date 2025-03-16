@@ -13,3 +13,7 @@ type DrawLineProps = {
   tool: string | null;
   strokeWidth: number;
 };
+type userData = {
+  id: string;
+  email: string | undefined;
+} | null;

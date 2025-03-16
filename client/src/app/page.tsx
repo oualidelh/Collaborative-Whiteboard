@@ -1,9 +1,11 @@
 import HomePage from "@/components/homePage";
+import { getUserData } from "./(auth)/actions";
 
-export default function Home() {
+export default async function Home() {
+  const userData = await getUserData();
   return (
     <div>
-      <HomePage />
+      <HomePage userData={userData} />
     </div>
   );
 }
