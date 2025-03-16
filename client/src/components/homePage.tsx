@@ -1,139 +1,129 @@
 "use client";
-import { useDraw } from "@/app/hooks/useDraw";
-import { drawLine } from "@/utils/drawLines";
-import React, { useEffect, useRef, useState } from "react";
-import { io } from "socket.io-client";
-import { ToolBar } from "./ToolBar";
-import { convertToAbsolute } from "@/utils/convertToAbsolute";
-import SignOut from "./SignOut";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { getSocket } from "@/utils/socket";
 
-const socket = io("http://localhost:5000");
+const socket = getSocket();
 
-const HomePage = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { onMouseDown, clear } = useDraw(createLine, canvasRef);
-  const [tool, setTool] = useState<"pen" | "eraser">("pen");
-  const [color, setColor] = useState("#000000");
-  const [strokeWidth, setStrokeWidth] = useState(2);
+interface HomePageProps {
+  userData: {
+    id: string;
+    email?: string;
+  } | null;
+}
 
-  const HandleClearCanvas = () => {
-    socket.emit("clear");
+const HomePage = ({ userData }: HomePageProps) => {
+  const router = useRouter();
+  const [roomInput, setRoomInput] = useState("");
+  const [roomName, setRoomName] = useState("");
+  const [error, setError] = useState("");
+
+  const createNewRoom = () => {
+    if (!userData?.id) return;
+
+    socket.emit("createRoom", {
+      id: userData.id,
+      email: userData.email,
+      roomName: roomName,
+    });
+
+    socket.once("room-created", (roomId: string) => {
+      console.log("Room created with ID:", roomId);
+      const newRoomLink = `/room/${roomId}`;
+      // navigator.clipboard.writeText(`${window.location.origin}${newRoomLink}`);
+      // alert("Room link copied to clipboard!");
+
+      // Redirect user to the created room
+      router.push(newRoomLink);
+    });
   };
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  const joinRoom = () => {
+    setError("");
+    let roomId = roomInput.trim();
 
-    socket.emit("client-ready");
-
-    socket.on("get-canvas-state", () => {
-      if (!canvasRef.current?.toDataURL()) return;
-      console.log("sending canvas state");
-      socket.emit("canvas-state", canvasRef.current.toDataURL());
-    });
-
-    socket.on("canvas-state-from-server", (state: string) => {
-      console.log("I received the state");
-      const img = new Image();
-      img.src = state;
-      img.onload = () => {
-        ctx?.drawImage(img, 0, 0);
-      };
-    });
-
-    socket.on(
-      "draw-line",
-      ({
-        prevPoint,
-        currentPoint,
-        color,
-        tool,
-        strokeWidth,
-      }: DrawLineProps) => {
-        // ✅ Use the utility function to convert points
-        const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
-          currentPoint,
-          prevPoint,
-          canvas
-        );
-
-        drawLine({
-          prevPoint: absPrevPoint,
-          currentPoint: absCurrentPoint,
-          ctx,
-          color,
-          tool,
-          strokeWidth,
-        });
+    try {
+      if (roomId.startsWith("http")) {
+        const url = new URL(roomId);
+        roomId = url.pathname.split("/").pop() || "";
       }
-    );
 
-    socket.on("clear", clear);
+      if (roomId) {
+        // Emit event to check if the room exists
+        socket.emit("check-room", roomId);
 
-    return () => {
-      socket.off("draw-line");
-    };
-  }, [canvasRef, strokeWidth, clear]);
+        socket.once("room-check-result", (data) => {
+          console.log("data", data);
+          if (data.exists) {
+            // If the room exists, emit a join-room event
+            socket.emit("join-room", roomId);
 
-  function createLine({ prevPoint, currentPoint, ctx }: Draw) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    socket.emit("draw-line", {
-      prevPoint,
-      currentPoint,
-      color,
-      tool,
-      strokeWidth,
-    });
-
-    // ✅ Use the utility function to convert points
-    const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
-      currentPoint,
-      prevPoint,
-      canvas
-    );
-
-    // Draw the line locally.
-    drawLine({
-      prevPoint: absPrevPoint,
-      currentPoint: absCurrentPoint,
-      ctx,
-      color,
-      tool,
-      strokeWidth,
-    });
-  }
+            // Redirect to the room page
+            router.push(`/room/${roomId}`);
+          } else {
+            setError("Room not found!");
+          }
+        });
+      } else {
+        setError("Invalid room ID or link.");
+      }
+    } catch (error) {
+      setError("Please enter a valid room link or ID.");
+      console.error("Error joining room:", error);
+    }
+  };
 
   return (
-    <div className="flex relative w-full flex-col justify-center items-center gap-4 py-5">
-      <ToolBar
-        selectedTool={tool}
-        onToolChange={setTool}
-        color={color}
-        onColorChange={setColor}
-        strokeWidth={strokeWidth}
-        onStrokeWidthChange={setStrokeWidth}
-        HandleClearCanvas={HandleClearCanvas}
-      />
-      <div
-        className="relative animate-slideFadeInBottom shadow-md rounded-lg 
-               w-[90vw] h-[90vw] max-w-[750px] max-h-[750px] 
-               sm:w-[600px] sm:h-[600px] 
-               md:w-[700px] md:h-[700px] 
-               lg:w-[750px] lg:h-[750px]"
-      >
-        <canvas
-          ref={canvasRef}
-          width={750}
-          height={750}
-          onMouseDown={onMouseDown}
-          className="w-full h-full bg-white rounded-lg"
-        />
+    <div className="min-h-screen bg-cream-50 flex items-center justify-center p-4">
+      <div className="glass-card w-full max-w-md p-8 rounded-lg space-y-6">
+        <h1 className="text-center text-2xl font-bold">
+          Collaborative Drawing App
+        </h1>
+
+        {/* Join Room Section */}
+        <div className="relative space-y-3">
+          <Input
+            type="text"
+            placeholder="Paste room link or enter ID"
+            value={roomInput}
+            onChange={(e) => setRoomInput(e.target.value)}
+            className="border p-2 w-full"
+          />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <Button
+            onClick={joinRoom}
+            className="w-full bg-sage-500 hover:bg-sage-600"
+          >
+            Join Room
+          </Button>
+        </div>
+
+        {/* Separator Line */}
+        <div className="flex items-center gap-2 my-4">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="text-gray-500 text-sm font-medium">or</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        {/* Create Room Section */}
+        <div className="relative space-y-3">
+          <Input
+            type="text"
+            placeholder="Enter Room Name"
+            value={roomName}
+            onChange={(e) => setRoomName(e.target.value)}
+            className="border p-2 w-full"
+          />
+          <Button
+            onClick={createNewRoom}
+            className="w-full bg-sage-500 hover:bg-sage-600"
+          >
+            Create New Room
+          </Button>
+        </div>
       </div>
-      <SignOut />
     </div>
   );
 };
