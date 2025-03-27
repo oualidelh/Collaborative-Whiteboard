@@ -1,3 +1,4 @@
+import { computePointInCanvas } from "@/utils/computePoints";
 import { useEffect, useRef, useState } from "react";
 export const useDraw = (
   onDraw: ({ ctx, currentPoint, prevPoint }: Draw) => void,
@@ -28,7 +29,7 @@ export const useDraw = (
 
     const mouseMoveHandler = (e: MouseEvent) => {
       if (!mouseDown) return;
-      const currentPoint = computePointInCanvas(e);
+      const currentPoint = computePointInCanvas(e, canvas);
 
       if (!ctx || !currentPoint) return;
 
@@ -36,15 +37,15 @@ export const useDraw = (
       prevPoint.current = currentPoint;
     };
 
-    const computePointInCanvas = (e: MouseEvent) => {
-      if (!canvas) return;
+    // const computePointInCanvas = (e: MouseEvent) => {
+    //   if (!canvas) return;
 
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
+    //   const rect = canvas.getBoundingClientRect();
+    //   const x = (e.clientX - rect.left) / rect.width;
+    //   const y = (e.clientY - rect.top) / rect.height;
 
-      return { x, y };
-    };
+    //   return { x, y };
+    // };
 
     const mouseUpHandler = () => {
       setMouseDown(false);

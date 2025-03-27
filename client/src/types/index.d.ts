@@ -17,3 +17,12 @@ type userData = {
   id: string;
   email: string | undefined;
 } | null;
+
+interface User {
+  socketId: string;
+  userId: string;
+  email: string;
+  room: string;
+  currentPoint: Point;
+  tool: string;
+}

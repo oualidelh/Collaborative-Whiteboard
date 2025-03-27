@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Pencil, Eraser, Trash2 } from "lucide-react";
+import { Eraser, Trash2, Brush } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Slider } from "./ui/slider";
 
 interface ToolbarProps {
-  selectedTool: "pen" | "eraser";
+  selectedTool: "default" | "pen" | "eraser";
   onToolChange: (tool: "pen" | "eraser") => void;
   color: string;
   onColorChange: (color: string) => void;
@@ -32,7 +32,8 @@ export const ToolBar = ({
             onClick={() => onToolChange("pen")}
             className="hover-lift w-9 h-9"
           >
-            <Pencil className="h-4 w-4" />
+            {/* <Pencil className="h-4 w-4" /> */}
+            <Brush className="h-4 w-4" />
           </Button>
         </Tooltip>
 

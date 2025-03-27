@@ -17,84 +17,98 @@ interface Room {
   roomName: string;
 }
 
-const rooms: Room[] = [];
-
 type Point = { x: number; y: number };
 
-type DrawLine = {
-  prevPoint: Point | null;
-  currentPoint: Point;
-  color: string;
-  tool: string | null;
-  strokeWidth: number;
-};
-type CreateRoom = {
-  id: string;
+interface User {
+  socketId: string;
+  userId: string;
   email: string;
-  roomName: string;
-};
+  room: string;
+  currentPoint: Point;
+  tool: string;
+}
 
-// Store canvas states per room
+const users: User[] = [];
+const rooms: Room[] = [];
+
 const canvasStates: Record<string, string | null> = {};
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  socket.on("createRoom", ({ id, email, roomName }: CreateRoom) => {
+  socket.on("createRoom", ({ id, email, roomName }) => {
     socket.join(id);
-    rooms.push({ userId: id, roomId: socket.id, email, roomName });
-    socket.emit("room-created", socket.id);
-    console.log("roomdidcreated", socket.id);
+    rooms.push({ userId: id, roomId: id, email, roomName });
+    canvasStates[id] = null; // Initialize empty state
+    socket.emit("room-created", id);
   });
 
   socket.on("check-room", (roomId) => {
     const roomExists = rooms.some((r) => r.roomId === roomId);
-
-    console.log("roomexists", roomExists);
-
-    // Send back room existence info
     socket.emit("room-check-result", { exists: roomExists });
   });
 
   socket.on("join-room", (roomId) => {
     const room = rooms.find((r) => r.roomId === roomId);
-
     if (room) {
       socket.join(roomId);
       console.log(`${socket.id} joined room: ${roomId}`);
 
-      // Send existing canvas state (if applicable)
+      // Send existing canvas state
       if (canvasStates[roomId]) {
         socket.emit("canvas-state-from-server", canvasStates[roomId]);
       }
-
-      // Notify other users in the room
-      socket.to(roomId).emit("user-joined", {
-        message: `User ${socket.id} joined room: ${roomId}`,
-      });
     }
   });
 
   socket.on("client-ready", (room) => {
-    socket.to(room).emit("get-canvas-state");
+    if (canvasStates[room]) {
+      socket.emit("canvas-state-from-server", canvasStates[room] || "");
+    }
   });
 
   socket.on("canvas-state", ({ state, room }) => {
-    console.log(`Received canvas state for room ${room}`);
-    canvasStates[room] = state; // Save the canvas state for the room
+    canvasStates[room] = state;
     socket.to(room).emit("canvas-state-from-server", state);
+  });
+
+  socket.on("user-state", ({ userData, room, currentPoint, tool }) => {
+    if (!userData || !userData.id) {
+      console.error("Invalid userData received:", userData);
+      return;
+    }
+
+    console.log("userpoints", currentPoint);
+    // Find existing user
+    const existingUser = users.find((user) => user.userId === userData.id);
+
+    if (existingUser) {
+      existingUser.socketId = socket.id; // Update socket ID in case of reconnect
+      existingUser.currentPoint = currentPoint;
+      existingUser.tool = tool;
+    } else {
+      // Add new user
+      users.push({
+        socketId: socket.id,
+        userId: userData.id,
+        email: userData.email,
+        room,
+        currentPoint,
+        tool,
+      });
+    }
+
+    console.log("users", users);
+    // Send updated user list to the room
+    io.to(room).emit(
+      "update-users",
+      users.filter((user) => user.room === room)
+    );
   });
 
   socket.on(
     "draw-line",
-    ({
-      prevPoint,
-      currentPoint,
-      color,
-      tool,
-      strokeWidth,
-      room,
-    }: DrawLine & { room: string }) => {
+    ({ prevPoint, currentPoint, color, tool, strokeWidth, room }) => {
       socket.to(room).emit("draw-line", {
         prevPoint,
         currentPoint,
@@ -106,22 +120,23 @@ io.on("connection", (socket) => {
   );
 
   socket.on("clear", (room) => {
-    canvasStates[room] = null; // Reset canvas state
+    canvasStates[room] = null;
     io.to(room).emit("clear");
-  });
-
-  socket.on("leave-room", (roomId) => {
-    socket.leave(roomId);
-    console.log(`${socket.id} left room: ${roomId}`);
-
-    // Notify other users in the room
-    socket.to(roomId).emit("user-left", {
-      message: `User ${socket.id} left the room.`,
-    });
   });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+
+    // Remove user from the users array
+    const userIndex = users.findIndex((user) => user.socketId === socket.id);
+    if (userIndex !== -1) {
+      const room = users[userIndex].room;
+      users.splice(userIndex, 1);
+      io.to(room).emit(
+        "update-users",
+        users.filter((user) => user.room === room)
+      );
+    }
   });
 });
 
