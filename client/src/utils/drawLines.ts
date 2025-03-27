@@ -12,6 +12,7 @@ export const drawLine = ({
   tool,
   strokeWidth,
 }: DrawLineProps) => {
+  if (tool == "default") return;
   const { x: currX, y: currY } = currentPoint;
   const lineColor = tool === "eraser" ? "#FFFFFF" : color;
   const lineWidth = strokeWidth;
