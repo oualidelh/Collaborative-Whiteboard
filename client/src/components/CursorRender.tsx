@@ -14,7 +14,7 @@ const CursorRender = ({ divElem }: CursorRenderProps) => {
   console.log("usercurur", users);
 
   useEffect(() => {
-    socket.on("update-users", (newUsers) => {
+    socket.on("update-users", ({ users: newUsers }) => {
       setUsers(newUsers);
     });
 
@@ -25,7 +25,7 @@ const CursorRender = ({ divElem }: CursorRenderProps) => {
   return (
     <>
       {divElem &&
-        users.map((user) => {
+        users?.map((user) => {
           if (!user.currentPoint) return null; // Ensure currentPoint exists
 
           return (

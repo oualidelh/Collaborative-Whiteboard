@@ -24,8 +24,8 @@ interface User {
   userId: string;
   email: string;
   room: string;
-  currentPoint: Point;
-  tool: string;
+  currentPoint?: Point;
+  tool?: string;
 }
 
 const users: User[] = [];
@@ -58,6 +58,11 @@ io.on("connection", (socket) => {
       if (canvasStates[roomId]) {
         socket.emit("canvas-state-from-server", canvasStates[roomId]);
       }
+
+      io.to(roomId).emit("room-info", {
+        roomName: room.roomName,
+        users: users.filter((user) => user.room === roomId),
+      });
     }
   });
 
@@ -73,21 +78,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("user-state", ({ userData, room, currentPoint, tool }) => {
-    if (!userData || !userData.id) {
-      console.error("Invalid userData received:", userData);
-      return;
-    }
+    if (!userData || !userData.id) return;
 
-    console.log("userpoints", currentPoint);
-    // Find existing user
     const existingUser = users.find((user) => user.userId === userData.id);
-
     if (existingUser) {
-      existingUser.socketId = socket.id; // Update socket ID in case of reconnect
+      existingUser.socketId = socket.id;
       existingUser.currentPoint = currentPoint;
       existingUser.tool = tool;
     } else {
-      // Add new user
       users.push({
         socketId: socket.id,
         userId: userData.id,
@@ -98,12 +96,43 @@ io.on("connection", (socket) => {
       });
     }
 
-    console.log("users", users);
-    // Send updated user list to the room
-    io.to(room).emit(
-      "update-users",
-      users.filter((user) => user.room === room)
-    );
+    // Send only users update
+    io.to(room).emit("update-users", {
+      users: users.filter((user) => user.room === room),
+    });
+    const roomInfo = rooms.find((r) => r.roomId === room);
+    const roomName = roomInfo?.roomName ? roomInfo.roomName : "Unknown";
+    if (roomInfo) {
+      io.to(room).emit("room-info", {
+        roomName: roomName,
+        users: users.filter((user) => user.room === room),
+      });
+    }
+  });
+
+  socket.on("send-room-info", ({ userData, room }) => {
+    if (!userData || !userData.id) return;
+
+    const existingUser = users.find((user) => user.userId === userData.id);
+    if (existingUser) {
+      existingUser.socketId = socket.id;
+    } else {
+      users.push({
+        socketId: socket.id,
+        userId: userData.id,
+        email: userData.email,
+        room,
+      });
+    }
+    // Send room info separately
+    const roomInfo = rooms.find((r) => r.roomId === room);
+    const roomName = roomInfo?.roomName ? roomInfo.roomName : "Unknown";
+    if (roomInfo) {
+      io.to(room).emit("room-info", {
+        roomName: roomName,
+        users: users.filter((user) => user.room === room),
+      });
+    }
   });
 
   socket.on(
@@ -136,6 +165,14 @@ io.on("connection", (socket) => {
         "update-users",
         users.filter((user) => user.room === room)
       );
+      const roomInfo = rooms.find((r) => r.roomId === room);
+      const roomName = roomInfo?.roomName ? roomInfo.roomName : "Unknown";
+      if (roomInfo) {
+        io.to(room).emit("room-info", {
+          roomName: roomName,
+          users: users.filter((user) => user.room === room),
+        });
+      }
     }
   });
 });

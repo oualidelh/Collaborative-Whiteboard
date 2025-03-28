@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useUserData } from "@/app/hooks/useUserData";
 import { computePointInCanvas } from "@/utils/computePoints";
 import CursorRender from "./CursorRender";
+import CanvasHeader from "./CanvasHeader";
 
 const socket = getSocket();
 
@@ -155,6 +156,16 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
     });
   };
 
+  const sendRoomInfo = () => {
+    socket.emit("send-room-info", {
+      userData,
+      room: roomId,
+    });
+
+    console.log("sendfromroompage header");
+  };
+  sendRoomInfo();
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -164,7 +175,8 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   }
 
   return (
-    <div className="flex relative flex-col justify-center items-center gap-4 py-5">
+    <div className="flex relative flex-col justify-center items-center gap-4 py-2">
+      <CanvasHeader />
       <ToolBar
         selectedTool={tool}
         onToolChange={setTool}
