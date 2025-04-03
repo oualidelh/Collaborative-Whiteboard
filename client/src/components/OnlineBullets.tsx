@@ -15,7 +15,7 @@ const OnlineBullets = ({
   return (
     <Tooltip content={tooltipText}>
       <div
-        className={`relative w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-medium
+        className={`relative animate-fadeIn w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-medium
           ${isOnline ? "bg-gray-800" : "bg-gray-400"}`} // Change to grey when offline
       >
         {initials}

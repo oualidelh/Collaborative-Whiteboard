@@ -1,5 +1,5 @@
 import { getSocket } from "@/utils/socket";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import OnlineBullets from "./OnlineBullets";
 import { useUserData } from "@/app/hooks/useUserData";
 
@@ -7,9 +7,9 @@ const socket = getSocket();
 
 const CanvasHeader = () => {
   const { userData } = useUserData();
-  const [roomName, setRoomName] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
+  const roomNameRef = useRef<string | null>(null); // Store the room name only once
 
   useEffect(() => {
     const handleRoomInfo = ({
@@ -19,9 +19,10 @@ const CanvasHeader = () => {
       users: User[];
       roomName: string;
     }) => {
-      setRoomName(roomName);
+      if (!roomNameRef.current) {
+        roomNameRef.current = roomName;
+      }
 
-      // Register users if not already stored
       setRegisteredUsers((prevRegistered) => {
         const newUsers = users.filter(
           (user) => !prevRegistered.some((reg) => reg.userId === user.userId)
@@ -40,10 +41,13 @@ const CanvasHeader = () => {
   }, []);
 
   return (
-    <header className="flex items-center w-full px-5 my-2 justify-between">
-      <h1 className="animate-slideFadeInTop text-2xl font-bold text-charcoal-700">
-        {`${roomName}'s Room`}
-      </h1>
+    <header className="flex items-center flex-col md:flex-row space-y-2 w-full px-5 my-2 mt-14 justify-between">
+      <div className="animate-slideFadeInTop">
+        <h3 className="text-charcoal-700 font-bold">Room Name:</h3>
+        <h1 className="text-xl font-bold text-charcoal-700">
+          {`${roomNameRef.current || "Unknown"}'s Room`}
+        </h1>
+      </div>
       <div className="flex flex-col items-center gap-2">
         <h3 className="animate-slideFadeInRight">
           Active Users: {users.length}
@@ -51,7 +55,7 @@ const CanvasHeader = () => {
         <div className="flex -space-x-2">
           {registeredUsers.map((user) => {
             const tooltipText =
-              user.userId === userData?.id ? "You" : user.email;
+              user.userId === userData?.id ? "You" : user.email.split("@")[0];
 
             const initials = user.email.slice(0, 2).toUpperCase();
 
@@ -64,7 +68,7 @@ const CanvasHeader = () => {
                 key={user.userId}
                 tooltipText={tooltipText}
                 initials={initials}
-                isOnline={isOnline} // Pass online status
+                isOnline={isOnline}
               />
             );
           })}

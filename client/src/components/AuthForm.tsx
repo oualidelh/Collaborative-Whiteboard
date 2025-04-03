@@ -17,6 +17,7 @@ import { login, signup } from "@/app/(auth)/actions";
 import { z } from "zod";
 import { LockIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -40,15 +41,16 @@ const AuthForm = ({ type }: { type: formType }) => {
     const formData = new FormData();
     formData.append("email", values.email);
     formData.append("password", values.password);
+    let errorMessage;
 
-    try {
-      if (type === "signUp") {
-        await signup(formData);
-      } else {
-        await login(formData);
-      }
-    } catch (error) {
-      console.error("An error occurred:", error);
+    if (type === "signUp") {
+      errorMessage = await signup(formData);
+    } else {
+      errorMessage = await login(formData);
+    }
+
+    if (errorMessage) {
+      toast.error(errorMessage);
     }
   };
 

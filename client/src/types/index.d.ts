@@ -25,4 +25,5 @@ interface User {
   room: string;
   currentPoint: Point;
   tool: string;
+  cursorColor: string;
 }

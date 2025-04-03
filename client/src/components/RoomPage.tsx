@@ -1,31 +1,47 @@
 "use client";
-import { useDraw } from "@/app/hooks/useDraw";
-import { drawLine } from "@/utils/drawLines";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { getSocket } from "@/utils/socket";
 import { ToolBar } from "@/components/ToolBar";
-import { convertToAbsolute } from "@/utils/convertToAbsolute";
-import LeaveRoom from "./LeaveRoom";
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/app/hooks/useUserData";
-import { computePointInCanvas } from "@/utils/computePoints";
 import CursorRender from "./CursorRender";
 import CanvasHeader from "./CanvasHeader";
+import { toast } from "sonner";
+import Canvas from "./canvas";
 
 const socket = getSocket();
 
 const RoomPage = ({ roomId }: { roomId: string }) => {
   const { userData } = useUserData();
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const divRef = useRef<HTMLDivElement | null>(null);
-  const { onMouseDown, clear } = useDraw(createLine, canvasRef);
   const [tool, setTool] = useState<"default" | "pen" | "eraser">("default");
   const [color, setColor] = useState("#000000");
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
+
+  const clear = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    toast.success("Canvas Cleared Successfully!");
+  }, []);
+
+  const leaveRoom = () => {
+    if (!socket || !roomId) return;
+
+    socket.emit("leave-room", roomId);
+
+    // Redirect to the home or lobby page after leaving
+    router.push("/");
+  };
 
   useEffect(() => {
     if (!roomId) {
@@ -53,118 +69,48 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   useEffect(() => {
     if (isLoading) return;
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    socket.on("canvas-state-from-server", (state: string) => {
-      console.log("Received canvas state");
-      const img = new Image();
-      img.src = state;
-      img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear before applying state
-        ctx.drawImage(img, 0, 0);
-      };
+    socket.on("user-joined-room", (useremail) => {
+      toast.info(`${useremail.split("@")[0]} has joined the room`);
     });
 
-    socket.on(
-      "draw-line",
-      ({
-        prevPoint,
-        currentPoint,
-        color,
-        tool,
-        strokeWidth,
-      }: DrawLineProps) => {
-        const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
-          currentPoint,
-          prevPoint,
-          canvas
-        );
-        drawLine({
-          prevPoint: absPrevPoint,
-          currentPoint: absCurrentPoint,
-          ctx,
-          color,
-          tool,
-          strokeWidth,
-        });
-      }
-    );
+    socket.on("user-left-room", (useremail) => {
+      toast.info(`${useremail.split("@")[0]} has left the room`);
+    });
+
+    socket.on("user-left-room", (useremail) => {
+      toast.info(`${useremail.split("@")[0]} has left the room`);
+    });
+
+    // socket.on("clear-failed", () => {
+    //   toast.error("Sorry! Only Admins Can Delete The Canvas");
+    // });
 
     socket.on("clear", clear);
 
     return () => {
-      socket.off("draw-line");
-      socket.off("canvas-state-from-server");
+      socket.off("user-joined-room");
+      socket.off("user-left-room");
+      socket.off("user-left-room");
       socket.off("clear");
     };
-  }, [isLoading, strokeWidth, clear, roomId, userData, tool]);
-
-  function createLine({ prevPoint, currentPoint, ctx }: Draw) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    socket.emit("draw-line", {
-      prevPoint,
-      currentPoint,
-      color,
-      tool,
-      strokeWidth,
-      room: roomId,
-    });
-
-    requestAnimationFrame(() => {
-      const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
-        currentPoint,
-        prevPoint,
-        canvas
-      );
-      drawLine({
-        prevPoint: absPrevPoint,
-        currentPoint: absCurrentPoint,
-        ctx,
-        color,
-        tool,
-        strokeWidth,
-      });
-    });
-  }
-
-  const saveCanvasState = () => {
-    if (!canvasRef.current) return;
-    const state = canvasRef.current.toDataURL();
-    socket.emit("canvas-state", { room: roomId, state });
-  };
-
-  const mouseMoveHandler = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Convert the React event to a native DOM event
-    const nativeEvent = e.nativeEvent;
-    const computedCurrentPoint = computePointInCanvas(nativeEvent, canvas);
-
-    if (!computedCurrentPoint) return; // Handle null case
-
-    socket.emit("user-state", {
-      userData,
-      room: roomId,
-      currentPoint: computedCurrentPoint,
-      tool,
-    });
-  };
+  }, [isLoading, clear]);
 
   const sendRoomInfo = () => {
+    if (isLoading) return;
     socket.emit("send-room-info", {
       userData,
       room: roomId,
     });
 
-    console.log("sendfromroompage header");
+    console.log("rooominfo sended", roomId);
   };
+
   sendRoomInfo();
+
+  const HandleClearCanvas = () => {
+    // console.log("room id clear", roomId);
+    // socket.emit("clear-perm", { roomId, userData });
+  };
 
   if (isLoading) {
     return (
@@ -175,7 +121,7 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   }
 
   return (
-    <div className="flex relative flex-col justify-center items-center gap-4 py-2">
+    <div className="flex relative  flex-col justify-center items-center gap-4 py-2">
       <CanvasHeader />
       <ToolBar
         selectedTool={tool}
@@ -184,7 +130,8 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
         onColorChange={setColor}
         strokeWidth={strokeWidth}
         onStrokeWidthChange={setStrokeWidth}
-        HandleClearCanvas={() => socket.emit("clear", roomId)}
+        HandleClearCanvas={HandleClearCanvas}
+        leaveRoom={leaveRoom}
       />
       <div
         ref={divRef}
@@ -194,16 +141,15 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
                  md:w-[700px] md:h-[700px]
                  lg:w-[750px] lg:h-[750px]"
       >
-        <canvas
-          ref={canvasRef}
-          width={750}
-          height={750}
-          onMouseMove={mouseMoveHandler}
-          onMouseDown={onMouseDown}
-          onMouseUp={saveCanvasState}
-          className="w-full h-full bg-white rounded-lg"
+        <Canvas
+          canvasRef={canvasRef}
+          userData={userData}
+          roomId={roomId}
+          tool={tool}
+          strokeWidth={strokeWidth}
+          color={color}
+          isLoading={isLoading}
         />
-        <LeaveRoom roomId={roomId} />
         <CursorRender divElem={divRef.current} />
       </div>
     </div>

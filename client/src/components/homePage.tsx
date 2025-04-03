@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { getSocket } from "@/utils/socket";
+import { toast } from "sonner";
 
 const socket = getSocket();
 
@@ -32,10 +33,8 @@ const HomePage = ({ userData }: HomePageProps) => {
     socket.once("room-created", (roomId: string) => {
       console.log("Room created with ID:", roomId);
       const newRoomLink = `/room/${roomId}`;
-      // navigator.clipboard.writeText(`${window.location.origin}${newRoomLink}`);
-      // alert("Room link copied to clipboard!");
-
-      // Redirect user to the created room
+      navigator.clipboard.writeText(`${window.location.origin}${newRoomLink}`);
+      toast.success("Room Link Copied Successfully!");
       router.push(newRoomLink);
     });
   };
@@ -63,11 +62,11 @@ const HomePage = ({ userData }: HomePageProps) => {
             // Redirect to the room page
             router.push(`/room/${roomId}`);
           } else {
-            setError("Room not found!");
+            setError("Invalid room ID or link.");
           }
         });
       } else {
-        setError("Invalid room ID or link.");
+        setError("Feild Required!");
       }
     } catch (error) {
       setError("Please enter a valid room link or ID.");
@@ -84,14 +83,24 @@ const HomePage = ({ userData }: HomePageProps) => {
 
         {/* Join Room Section */}
         <div className="relative space-y-3">
+          <p className="text-red-500 text-sm px-2 min-h-[20px] font-medium">
+            {error || " "}
+          </p>
           <Input
             type="text"
             placeholder="Paste room link or enter ID"
             value={roomInput}
-            onChange={(e) => setRoomInput(e.target.value)}
-            className="border p-2 w-full"
+            onChange={(e) => {
+              setRoomInput(e.target.value);
+              if (error) setError(""); // Clear error when user starts typing
+            }}
+            className={
+              error
+                ? "border animate-fadeIn border-red-500 focus-visible:ring-red-500"
+                : "border p-2 w-full"
+            }
           />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+
           <Button
             onClick={joinRoom}
             className="w-full bg-sage-500 hover:bg-sage-600"

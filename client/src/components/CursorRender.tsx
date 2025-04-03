@@ -34,6 +34,7 @@ const CursorRender = ({ divElem }: CursorRenderProps) => {
               x={user.currentPoint.x * divElem.clientWidth}
               y={user.currentPoint.y * divElem.clientHeight}
               tool={user.tool}
+              cursorColor={user.cursorColor}
             />
           );
         })}
