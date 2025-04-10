@@ -6,11 +6,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "https://collaborative-whiteboard-one.vercel.app/",
+    credentials: true,
   },
 });
 
-// room type
+// room
 
 interface Room {
   userId: string;
