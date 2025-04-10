@@ -10,6 +10,8 @@ const io = new Server(server, {
   },
 });
 
+// room type
+
 interface Room {
   userId: string;
   roomId: string;
