@@ -10,6 +10,8 @@ export function Cursor({ x, y, tool, cursorColor }: Props) {
     return null;
   }
 
+  console.log("xxxxx, yyyyyy, toooool", x, y, tool, cursorColor);
+
   return (
     <div
       className="pointer-events-none absolute top-0 left-0"

@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { getSocket } from "@/utils/socket";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 
 const socket = getSocket();
 
@@ -24,21 +25,22 @@ const HomePage = ({ userData }: HomePageProps) => {
   const createNewRoom = () => {
     if (!userData?.id) return;
 
-    socket.emit("createRoom", {
+    const roomId = uuidv4();
+
+    socket.emit("create-room", {
       id: userData.id,
       email: userData.email,
+      roomId,
       roomName: roomName,
     });
 
-    socket.once("room-created", (roomId: string) => {
-      console.log("Room created with ID:", roomId);
+    socket.once("room-created", () => {
       const newRoomLink = `/room/${roomId}`;
       navigator.clipboard.writeText(`${window.location.origin}${newRoomLink}`);
       toast.success("Room Link Copied Successfully!");
       router.push(newRoomLink);
     });
   };
-
   const joinRoom = () => {
     setError("");
     let roomId = roomInput.trim();
@@ -57,7 +59,7 @@ const HomePage = ({ userData }: HomePageProps) => {
           console.log("data", data);
           if (data.exists) {
             // If the room exists, emit a join-room event
-            socket.emit("join-room", roomId);
+            socket.emit("join-room", { roomId, userData });
 
             // Redirect to the room page
             router.push(`/room/${roomId}`);
@@ -94,6 +96,12 @@ const HomePage = ({ userData }: HomePageProps) => {
               setRoomInput(e.target.value);
               if (error) setError(""); // Clear error when user starts typing
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault(); // prevent default form submission if needed
+                joinRoom();
+              }
+            }}
             className={
               error
                 ? "border animate-fadeIn border-red-500 focus-visible:ring-red-500"
@@ -123,6 +131,12 @@ const HomePage = ({ userData }: HomePageProps) => {
             placeholder="Enter Room Name"
             value={roomName}
             onChange={(e) => setRoomName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                createNewRoom();
+              }
+            }}
             className="border p-2 w-full"
           />
           <Button

@@ -2,8 +2,10 @@ import { useDraw } from "@/app/hooks/useDraw";
 import { computePointInCanvas } from "@/utils/computePoints";
 import { convertToAbsolute } from "@/utils/convertToAbsolute";
 import { drawLine } from "@/utils/drawLines";
-import { getSocket } from "@/utils/socket";
-import React, { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
+import { DefaultEventsMap } from "@socket.io/component-emitter";
+import React, { useEffect, useState, useMemo } from "react";
+import { throttle } from "lodash";
 
 interface UserData {
   id: string;
@@ -18,9 +20,8 @@ interface CanvasProps {
   strokeWidth: number;
   color: string;
   isLoading: boolean;
+  socket: Socket<DefaultEventsMap, DefaultEventsMap>;
 }
-
-const socket = getSocket();
 
 const Canvas = ({
   canvasRef,
@@ -30,11 +31,10 @@ const Canvas = ({
   strokeWidth,
   color,
   isLoading,
+  socket,
 }: CanvasProps) => {
   const { onMouseDown } = useDraw(createLine, canvasRef);
   const [cursorColor, setCursorColor] = useState<string>("");
-
-  // console.log("roooom", roomId);
 
   useEffect(() => {
     const randomColor = `hsl(${Math.random() * 360}, ${
@@ -51,16 +51,11 @@ const Canvas = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    if (userData) {
-      socket.emit("user-joined", { roomId, userData });
-    }
-
     socket.on("canvas-state-from-server", (state: string) => {
-      console.log("Received canvas state");
       const img = new Image();
       img.src = state;
       img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear before applying state
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
       };
     });
@@ -74,7 +69,6 @@ const Canvas = ({
         tool,
         strokeWidth,
       }: DrawLineProps) => {
-        console.log("received drawline from server");
         const { absCurrentPoint, absPrevPoint } = convertToAbsolute(
           currentPoint,
           prevPoint,
@@ -95,7 +89,7 @@ const Canvas = ({
       socket.off("draw-line");
       socket.off("canvas-state-from-server");
     };
-  }, [canvasRef, isLoading, userData, roomId]);
+  }, [canvasRef, isLoading, userData, roomId, socket]);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
     const canvas = canvasRef.current;
@@ -127,24 +121,27 @@ const Canvas = ({
     });
   }
 
-  const mouseMoveHandler = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  // Keep this outside if you want the same throttling behavior across renders
+  const throttledMouseMove = useMemo(() => {
+    return throttle((e: React.MouseEvent<HTMLCanvasElement>) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-    // Convert the React event to a native DOM event
-    const nativeEvent = e.nativeEvent;
-    const computedCurrentPoint = computePointInCanvas(nativeEvent, canvas);
+      const nativeEvent = e.nativeEvent;
+      const computedCurrentPoint = computePointInCanvas(nativeEvent, canvas);
 
-    if (!computedCurrentPoint) return; // Handle null case
+      if (!computedCurrentPoint) return;
 
-    socket.emit("user-state", {
-      userData,
-      room: roomId,
-      currentPoint: computedCurrentPoint,
-      tool,
-      cursorColor,
-    });
-  };
+      socket.emit("user-state", {
+        userData,
+        room: roomId,
+        currentPoint: computedCurrentPoint,
+        tool,
+        cursorColor,
+      });
+    }, 100);
+  }, [canvasRef, socket, userData, roomId, tool, cursorColor]);
+
   const saveCanvasState = () => {
     if (!canvasRef.current) return;
     const state = canvasRef.current.toDataURL();
@@ -156,7 +153,7 @@ const Canvas = ({
         ref={canvasRef}
         width={750}
         height={750}
-        onMouseMove={mouseMoveHandler}
+        onMouseMove={throttledMouseMove}
         onMouseDown={onMouseDown}
         onMouseUp={saveCanvasState}
         className="w-full h-full bg-white rounded-lg cursor-none"

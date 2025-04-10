@@ -8,6 +8,8 @@ import CursorRender from "./CursorRender";
 import CanvasHeader from "./CanvasHeader";
 import { toast } from "sonner";
 import Canvas from "./canvas";
+import { useRoomSocket } from "@/app/hooks/useRoomSocket";
+import { useCanvasSocketEvents } from "@/app/hooks/useCanvasSocketEvents";
 
 const socket = getSocket();
 
@@ -31,85 +33,34 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    toast.success("Canvas Cleared Successfully!");
+    toast.success("Admin Has Cleared The Canvas!");
   }, []);
 
-  const leaveRoom = () => {
+  const leaveRoom = useCallback(() => {
     if (!socket || !roomId) return;
-
     socket.emit("leave-room", roomId);
-
-    // Redirect to the home or lobby page after leaving
     router.push("/");
-  };
-
-  useEffect(() => {
-    if (!roomId) {
-      router.push("/");
-      return;
-    }
-
-    socket.emit("check-room", roomId);
-
-    socket.once("room-check-result", (data) => {
-      if (data.exists) {
-        socket.emit("join-room", roomId);
-        socket.emit("client-ready", roomId); // Request canvas state
-        setIsLoading(false);
-      } else {
-        router.push("/");
-      }
-    });
-
-    return () => {
-      socket.off("room-check-result");
-    };
   }, [roomId, router]);
 
+  useRoomSocket({ socket, roomId, userData, setIsLoading });
+  useCanvasSocketEvents(socket, clear);
+
+  // send room info only once after loading
   useEffect(() => {
-    if (isLoading) return;
-
-    socket.on("user-joined-room", (useremail) => {
-      toast.info(`${useremail.split("@")[0]} has joined the room`);
-    });
-
-    socket.on("user-left-room", (useremail) => {
-      toast.info(`${useremail.split("@")[0]} has left the room`);
-    });
-
-    socket.on("user-left-room", (useremail) => {
-      toast.info(`${useremail.split("@")[0]} has left the room`);
-    });
-
-    // socket.on("clear-failed", () => {
-    //   toast.error("Sorry! Only Admins Can Delete The Canvas");
-    // });
-
-    socket.on("clear", clear);
-
+    if (!isLoading) {
+      socket.emit("send-room-info", {
+        userData,
+        room: roomId,
+      });
+      console.log("🔌 useEffect triggered");
+    }
     return () => {
-      socket.off("user-joined-room");
-      socket.off("user-left-room");
-      socket.off("user-left-room");
-      socket.off("clear");
+      console.log("🧹 useEffect cleanup");
     };
-  }, [isLoading, clear]);
-
-  const sendRoomInfo = () => {
-    if (isLoading) return;
-    socket.emit("send-room-info", {
-      userData,
-      room: roomId,
-    });
-
-    console.log("rooominfo sended", roomId);
-  };
-
-  sendRoomInfo();
+  }, [isLoading, userData, roomId]);
 
   const HandleClearCanvas = () => {
-    // console.log("room id clear", roomId);
-    // socket.emit("clear-perm", { roomId, userData });
+    socket.emit("clear-perm", { roomId, userData });
   };
 
   if (isLoading) {
@@ -121,8 +72,8 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   }
 
   return (
-    <div className="flex relative  flex-col justify-center items-center gap-4 py-2">
-      <CanvasHeader />
+    <div className="flex relative flex-col justify-center items-center gap-4 py-2">
+      <CanvasHeader socket={socket} />
       <ToolBar
         selectedTool={tool}
         onToolChange={setTool}
@@ -143,6 +94,7 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
       >
         <Canvas
           canvasRef={canvasRef}
+          socket={socket}
           userData={userData}
           roomId={roomId}
           tool={tool}
@@ -150,7 +102,7 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
           color={color}
           isLoading={isLoading}
         />
-        <CursorRender divElem={divRef.current} />
+        <CursorRender socket={socket} divElem={divRef.current} />
       </div>
     </div>
   );

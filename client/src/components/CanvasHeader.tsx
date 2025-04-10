@@ -1,11 +1,17 @@
-import { getSocket } from "@/utils/socket";
+// import { getSocket } from "@/utils/socket";
 import React, { useEffect, useState, useRef } from "react";
 import OnlineBullets from "./OnlineBullets";
 import { useUserData } from "@/app/hooks/useUserData";
+import { Socket } from "socket.io-client";
+import { DefaultEventsMap } from "@socket.io/component-emitter";
 
-const socket = getSocket();
+interface CanvHeaderProps {
+  socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+}
 
-const CanvasHeader = () => {
+// const socket = getSocket();
+
+const CanvasHeader = ({ socket }: CanvHeaderProps) => {
   const { userData } = useUserData();
   const [users, setUsers] = useState<User[]>([]);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
@@ -38,14 +44,14 @@ const CanvasHeader = () => {
     return () => {
       socket.off("room-info", handleRoomInfo);
     };
-  }, []);
+  }, [socket]);
 
   return (
     <header className="flex items-center flex-col md:flex-row space-y-2 w-full px-5 my-2 mt-14 justify-between">
       <div className="animate-slideFadeInTop">
         <h3 className="text-charcoal-700 font-bold">Room Name:</h3>
         <h1 className="text-xl font-bold text-charcoal-700">
-          {`${roomNameRef.current || "Unknown"}'s Room`}
+          {`${roomNameRef.current || "Unknown"} Room`}
         </h1>
       </div>
       <div className="flex flex-col items-center gap-2">

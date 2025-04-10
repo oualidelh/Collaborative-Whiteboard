@@ -7,7 +7,7 @@ export default async function Page({
 }) {
   const { roomId } = await params;
 
-  console.log("id", roomId);
+  console.log("🔥 Page component rendered with roomId:", roomId);
 
-  return <RoomPage roomId={roomId} />;
+  return <RoomPage key={roomId} roomId={roomId} />;
 }
