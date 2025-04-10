@@ -1,11 +1,5 @@
-import HomePage from "@/components/homePage";
-import { getUserData } from "./(auth)/actions";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const userData = await getUserData();
-  return (
-    <div>
-      <HomePage userData={userData} />
-    </div>
-  );
+  return <div>{redirect("/home")}</div>;
 }

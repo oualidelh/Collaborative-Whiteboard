@@ -94,7 +94,7 @@ export default {
         slideFadeInBottom: "slideFadeInBottom 1.5s ease-out",
         slideFadeInTop: "slideFadeInTop 1.5s ease-out",
         slideFadeInRight: "slideFadeInRight 1.5s ease-out",
-        fadeIn: "fadeIn 3s ease-out",
+        fadeIn: "fadeIn 1s ease-out",
       },
     },
   },

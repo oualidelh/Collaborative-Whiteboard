@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Eraser, Trash2, Brush } from "lucide-react";
+import { Eraser, Trash2, Brush, LogOut } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Slider } from "./ui/slider";
 
@@ -11,6 +11,7 @@ interface ToolbarProps {
   strokeWidth: number;
   onStrokeWidthChange: (width: number) => void;
   HandleClearCanvas: () => void;
+  leaveRoom: () => void;
 }
 
 export const ToolBar = ({
@@ -21,6 +22,7 @@ export const ToolBar = ({
   strokeWidth,
   onStrokeWidthChange,
   HandleClearCanvas,
+  leaveRoom,
 }: ToolbarProps) => {
   return (
     <div className="animate-slideFadeInLeft flex flex-wrap items-center gap-4 p-3 my-4 bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
@@ -93,8 +95,20 @@ export const ToolBar = ({
           className="w-32 hover:cursor-pointer"
         />
       </div>
-
       <div className="h-6 w-px bg-cream-200 hidden md:block" />
+      <Tooltip content="Leave Room">
+        <Button
+          variant={"default"}
+          size="icon"
+          onClick={leaveRoom}
+          className=" w-9 h-9"
+        >
+          <LogOut className="h-4 w-4" />
+          {/* <p className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                Log-Out
+              </p> */}
+        </Button>
+      </Tooltip>
     </div>
   );
 };
