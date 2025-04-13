@@ -133,6 +133,8 @@ const Canvas = ({
 
       if (!computedCurrentPoint) return;
 
+      console.log("computed curent from client", computedCurrentPoint);
+
       socket.emit("user-state", {
         userData,
         room: roomId,
