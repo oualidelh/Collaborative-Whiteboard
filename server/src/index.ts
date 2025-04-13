@@ -168,7 +168,16 @@ io.on("connection", (socket) => {
     ({ userData, room, currentPoint, tool, cursorColor }) => {
       if (!userData || !userData.id) return;
 
+      console.log(
+        "user state update from client",
+        userData,
+        room,
+        currentPoint,
+        tool,
+        cursorColor
+      );
       const existingUser = users.find((user) => user.userId === userData.id);
+      console.log("existingUser", existingUser);
       if (existingUser) {
         existingUser.socketId = socket.id;
         existingUser.room = room;
@@ -187,6 +196,10 @@ io.on("connection", (socket) => {
         });
       }
 
+      console.log(
+        "user that get teh update",
+        users.filter((user) => user.room === room)
+      );
       // Send only users update
 
       io.to(room).emit("update-users", {
