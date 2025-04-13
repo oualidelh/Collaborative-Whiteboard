@@ -3,11 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { getSocket } from "@/utils/socket";
+import { GetSocket } from "@/utils/socket";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
-const socket = getSocket();
+const socket = GetSocket();
 
 interface HomePageProps {
   userData: {

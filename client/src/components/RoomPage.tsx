@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { getSocket } from "@/utils/socket";
+import { GetSocket } from "@/utils/socket";
 import { ToolBar } from "@/components/ToolBar";
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/app/hooks/useUserData";
@@ -8,10 +8,11 @@ import CursorRender from "./CursorRender";
 import CanvasHeader from "./CanvasHeader";
 import { toast } from "sonner";
 import Canvas from "./canvas";
+import { useReloadPage } from "@/app/hooks/useReloadPage";
 import { useRoomSocket } from "@/app/hooks/useRoomSocket";
 import { useCanvasSocketEvents } from "@/app/hooks/useCanvasSocketEvents";
 
-const socket = getSocket();
+const socket = GetSocket();
 
 const RoomPage = ({ roomId }: { roomId: string }) => {
   const { userData } = useUserData();
@@ -33,6 +34,8 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
     if (!ctx) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const state = canvas.toDataURL();
+    localStorage.setItem("canvasState", state);
     toast.success("Admin Has Cleared The Canvas!");
   }, []);
 
@@ -44,6 +47,7 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
 
   useRoomSocket({ socket, roomId, userData, setIsLoading });
   useCanvasSocketEvents(socket, clear);
+  useReloadPage(roomId, socket);
 
   // send room info only once after loading
   useEffect(() => {

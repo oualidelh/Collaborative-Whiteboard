@@ -11,11 +11,8 @@ interface CursorRenderProps {
 const CursorRender = ({ divElem, socket }: CursorRenderProps) => {
   const [users, setUsers] = useState<User[]>([]);
 
-  console.log("user-cursor", users);
-
   useEffect(() => {
     socket.on("update-users", ({ users: newUsers }) => {
-      console.log("receiving the server update userrs");
       setUsers(newUsers);
     });
 

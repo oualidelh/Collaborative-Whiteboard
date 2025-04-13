@@ -5,6 +5,25 @@ import { toast } from "sonner";
 import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 
+interface Room {
+  userId: string;
+  roomId: string;
+  email: string;
+  roomName: string;
+}
+
+type Point = { x: number; y: number };
+
+interface User {
+  socketId: string;
+  userId: string;
+  email: string;
+  room: string;
+  currentPoint?: Point;
+  tool?: string;
+  cursorColor?: string;
+}
+
 interface UserData {
   id: string;
   email?: string;
@@ -57,12 +76,28 @@ export function useRoomSocket({
       toast.info(`${email?.split("@")[0]} has left the room`);
     };
 
+    const handleLocalStorage = (room: Room[], user: User[]) => {
+      const [roomData] = room;
+      const [userData] = user;
+
+      if (roomData && userData) {
+        localStorage.setItem("room", JSON.stringify(roomData));
+        localStorage.setItem("user", JSON.stringify(userData));
+      } else {
+        console.warn("Room or user data is missing.");
+      }
+    };
+
     socket.on("user-joined-room", handleUserJoin);
     socket.on("user-left-room", handleUserLeave);
+    socket.on("your-info", ({ room, user }) => {
+      handleLocalStorage(room, user);
+    });
 
     return () => {
       socket.off("user-joined-room", handleUserJoin);
       socket.off("user-left-room", handleUserLeave);
+      socket.off("your-info");
     };
   }, [userData, socket]);
 }

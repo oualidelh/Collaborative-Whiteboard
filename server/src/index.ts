@@ -6,12 +6,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "collaborative-whiteboard-one.vercel.app",
+    origin: ["superb-sunshine-b4a864.netlify.app", "http://localhost:3000"],
     credentials: true,
   },
 });
-
-// room
 
 interface Room {
   userId: string;
@@ -68,9 +66,9 @@ function manageUserRoom({
           users: remainingUsers,
         });
       }
-      console.log("User moved to new room:", roomId, remainingUsers);
+      // console.log("User moved to new room:", roomId, remainingUsers);
     } else {
-      console.log("User already in the correct room.");
+      // console.log("User already in the correct room.");
     }
   } else {
     users.push({
@@ -90,7 +88,8 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     rooms.push({ userId: id, roomId: roomId, email, roomName });
 
-    canvasStates[roomId] = null; // Initialize empty state
+    canvasStates[roomId] = null;
+    io.to(roomId).emit("canvas-state-from-server", canvasStates[roomId]);
     socket.emit("room-created", roomId);
   });
 
@@ -129,6 +128,21 @@ io.on("connection", (socket) => {
         users: users.filter((user) => user.room === roomId),
       });
     }
+    socket.emit("your-info", {
+      room: rooms.filter((room) => room.roomId === roomId),
+      user: users.filter((user) => user.userId === userData.id),
+    });
+  });
+
+  socket.on("reconnection-info", ({ room, user }) => {
+    rooms.push(room);
+    users.push(user);
+    socket.emit("reload-page");
+  });
+
+  socket.on("canvas-state-afterReload", (savedState, roomId) => {
+    canvasStates[roomId] = savedState;
+    io.to(roomId).emit("canvas-state-from-server", savedState);
   });
 
   socket.on("client-ready", (room) => {
@@ -139,7 +153,7 @@ io.on("connection", (socket) => {
 
   socket.on("canvas-state", ({ state, room }) => {
     canvasStates[room] = state;
-    socket.to(room).emit("canvas-state-from-server", state);
+    io.to(room).emit("canvas-state-from-server", state);
   });
 
   socket.on(
@@ -185,7 +199,6 @@ io.on("connection", (socket) => {
   );
 
   socket.on("send-room-info", ({ userData, room }) => {
-    // console.log("the room info sended", room);
     if (!userData || !userData.id) return;
 
     const existingUser = users.find((user) => user.userId === userData.id);
@@ -285,10 +298,6 @@ io.on("connection", (socket) => {
       const userEmail = users[userIndex].email;
       socket.to(room).emit("user-left-room", userEmail);
       users.splice(userIndex, 1);
-      console.log(
-        "users update disconnect ",
-        users.filter((user) => user.room === room)
-      );
       io.to(room).emit("update-users", {
         users: users.filter((user) => user.room === room),
       });
