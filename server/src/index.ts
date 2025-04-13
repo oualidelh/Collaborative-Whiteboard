@@ -114,6 +114,11 @@ io.on("connection", (socket) => {
 
       manageUserRoom({ socket, roomId, userData, users });
 
+      console.log(
+        "users update to client",
+        users.filter((user) => user.room === roomId)
+      );
+
       io.to(roomId).emit("update-users", {
         users: users.filter((user) => user.room === roomId),
       });
