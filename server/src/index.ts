@@ -52,6 +52,7 @@ function manageUserRoom({
 
   if (existingUser) {
     if (existingUser.room !== roomId) {
+      console.log("is inside existed");
       socket.leave(existingUser.room);
       socket.to(existingUser.room).emit("user-left-room", userData.email);
       const userOldRoom = existingUser.room;
@@ -71,6 +72,7 @@ function manageUserRoom({
       // console.log("User already in the correct room.");
     }
   } else {
+    console.log("is inside notttt existed");
     users.push({
       socketId: socket.id,
       userId: userData.id,
