@@ -3,9 +3,9 @@ import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
-import { getSocket } from "@/utils/socket";
+import { GetSocket } from "@/utils/socket";
 
-const socket = getSocket();
+const socket = GetSocket();
 
 type LeaveRoomProps = {
   roomId: string;
