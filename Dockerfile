@@ -1,23 +1,22 @@
-# Use Node.js base image
 FROM node:18
 
-# Set working directory
 WORKDIR /app
 
-# Copy server package files first to install dependencies
+# Copy package.json files and install dependencies
 COPY server/package*.json ./server/
 
-# Install server dependencies
+# Install deps (including dev ones)
 RUN cd server && npm install
 
-# Copy the entire server code
+# Copy entire server folder
 COPY server ./server
 
-# Build the TypeScript code
-RUN cd server && npx tsc
+# Optional: install typescript globally to avoid tsc errors
+RUN npm install -g typescript
 
-# Expose the port your server listens on (e.g., 4000)
+# Compile TypeScript using script instead of npx
+RUN cd server && npm run build
+
 EXPOSE 4000
 
-# Run the compiled JS output (adjust path if needed)
 CMD ["node", "server/dist/index.js"]
