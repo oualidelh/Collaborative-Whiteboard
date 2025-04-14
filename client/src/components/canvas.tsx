@@ -54,7 +54,7 @@ const Canvas = ({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    if (userData) return;
+    if (!userData) return;
 
     socket.on("canvas-state-from-server", (state: string) => {
       const img = new Image();
