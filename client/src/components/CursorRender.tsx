@@ -21,7 +21,7 @@ const CursorRender = ({ divElem, socket }: CursorRenderProps) => {
     return () => {
       socket.off("update-users");
     };
-  }, [socket]);
+  }, [socket, users]);
   return (
     <>
       {divElem &&
