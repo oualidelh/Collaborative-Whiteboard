@@ -54,6 +54,7 @@ const Canvas = ({
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    if (userData) return;
 
     socket.on("canvas-state-from-server", (state: string) => {
       const img = new Image();
@@ -125,12 +126,14 @@ const Canvas = ({
       });
     });
   }
-
+  console.log("userdata inside canvas", userData);
   // Throttle mouse move to avoid spamming socket events
   const throttledMouseMove = useMemo(() => {
     return throttle((e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
+      console.log("userdata inside mousse move", userData);
+      if (!userData) return;
 
       const nativeEvent = e.nativeEvent;
       const computedCurrentPoint = computePointInCanvas(nativeEvent, canvas);
