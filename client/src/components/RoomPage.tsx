@@ -4,7 +4,7 @@ import { GetSocket } from "@/utils/socket";
 import { ToolBar } from "@/components/ToolBar";
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/app/hooks/useUserData";
-import CursorRender from "./CursorRender";
+// import CursorRender from "./CursorRender";
 import CanvasHeader from "./CanvasHeader";
 import { toast } from "sonner";
 import Canvas from "./canvas";
@@ -105,8 +105,9 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
           strokeWidth={strokeWidth}
           color={color}
           isLoading={isLoading}
+          divElem={divRef.current}
         />
-        <CursorRender socket={socket} divElem={divRef.current} />
+        {/* <CursorRender socket={socket} divElem={divRef.current} /> */}
       </div>
     </div>
   );
