@@ -18,6 +18,7 @@
 import { io, Socket } from "socket.io-client";
 import { toast } from "sonner";
 
+// socket url
 const SOCKET_URL = "https://collaborative-whiteboard-2xlo.onrender.com";
 
 let socket: Socket | null = null;
