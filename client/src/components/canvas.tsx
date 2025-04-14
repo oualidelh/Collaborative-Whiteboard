@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
 import React, { useEffect, useState, useMemo } from "react";
 import { throttle } from "lodash";
+import CursorRender from "./CursorRender";
 
 interface UserData {
   id: string;
@@ -21,6 +22,7 @@ interface CanvasProps {
   color: string;
   isLoading: boolean;
   socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+  divElem: HTMLDivElement | null;
 }
 
 const Canvas = ({
@@ -32,6 +34,7 @@ const Canvas = ({
   color,
   isLoading,
   socket,
+  divElem,
 }: CanvasProps) => {
   const { onMouseDown } = useDraw(createLine, canvasRef);
   const [cursorColor, setCursorColor] = useState<string>("");
@@ -43,23 +46,6 @@ const Canvas = ({
     }%, ${25 + Math.random() * 25}%)`;
     setCursorColor(randomColor);
   }, []);
-
-  // Emit user state on mount (even before mouse move)
-  useEffect(() => {
-    if (isLoading || !userData) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Emit initial user cursor state
-    socket.emit("user-state", {
-      userData,
-      room: roomId,
-      currentPoint: { x: 0.01, y: 0.01 }, // default almost invisible point
-      tool,
-      cursorColor,
-    });
-  }, [isLoading, userData, roomId, socket, tool, cursorColor, canvasRef]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -180,6 +166,7 @@ const Canvas = ({
         onMouseUp={saveCanvasState}
         className="w-full h-full bg-white rounded-lg cursor-none"
       />
+      <CursorRender socket={socket} divElem={divElem} />
     </div>
   );
 };
