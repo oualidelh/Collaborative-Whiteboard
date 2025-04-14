@@ -4,11 +4,11 @@ FROM node:18
 # Set working directory
 WORKDIR /app
 
-# Copy server package files and install dependencies
+# Copy server dependencies and install them
 COPY server/package*.json ./server/
 RUN cd server && npm install
 
-# Copy the entire server folder
+# Copy the full server code
 COPY server ./server
 
 # Install TypeScript globally
@@ -17,10 +17,10 @@ RUN npm install -g typescript
 # Build the TypeScript code
 RUN cd server && npm run build
 
-# Set working directory to built server code
+# Change directory to the server folder
 WORKDIR /app/server
 
-# Expose the port your server listens on
+# Expose the port (make sure your app uses process.env.PORT)
 EXPOSE 5000
 
 # Start the app
