@@ -72,8 +72,6 @@ export async function getUserData() {
     console.warn("No active session found.");
     return null; // No session found, user is not logged in
   }
-
-  console.log("userrrrr", data);
   const {
     user: { id },
     user: { email },

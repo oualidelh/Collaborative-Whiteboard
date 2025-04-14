@@ -67,17 +67,19 @@ function manageUserRoom({
           users: remainingUsers,
         });
       }
-      // console.log("User moved to new room:", roomId, remainingUsers);
     } else {
-      // console.log("User already in the correct room.");
+      // User is already in the correct room
     }
   } else {
-    console.log("is inside notttt existed");
+    // If user is not in the list, add them with default values
     users.push({
       socketId: socket.id,
       userId: userData.id,
       email: userData.email,
       room: roomId,
+      currentPoint: { x: 0, y: 0 }, // Default point (can be customized)
+      tool: "default", // Default tool
+      cursorColor: "#000000", // Default cursor color
     });
     console.log("New user added to room:", roomId);
   }
