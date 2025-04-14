@@ -36,12 +36,30 @@ const Canvas = ({
   const { onMouseDown } = useDraw(createLine, canvasRef);
   const [cursorColor, setCursorColor] = useState<string>("");
 
+  // Random color for the cursor
   useEffect(() => {
     const randomColor = `hsl(${Math.random() * 360}, ${
       70 + Math.random() * 20
     }%, ${25 + Math.random() * 25}%)`;
     setCursorColor(randomColor);
   }, []);
+
+  // Emit user state on mount (even before mouse move)
+  useEffect(() => {
+    if (isLoading || !userData) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Emit initial user cursor state
+    socket.emit("user-state", {
+      userData,
+      room: roomId,
+      currentPoint: { x: 0.01, y: 0.01 }, // default almost invisible point
+      tool,
+      cursorColor,
+    });
+  }, [isLoading, userData, roomId, socket, tool, cursorColor, canvasRef]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -122,7 +140,7 @@ const Canvas = ({
     });
   }
 
-  // Keep this outside if you want the same throttling behavior across renders
+  // Throttle mouse move to avoid spamming socket events
   const throttledMouseMove = useMemo(() => {
     return throttle((e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
@@ -150,6 +168,7 @@ const Canvas = ({
     const state = canvasRef.current.toDataURL();
     socket.emit("canvas-state", { room: roomId, state });
   };
+
   return (
     <div>
       <canvas
