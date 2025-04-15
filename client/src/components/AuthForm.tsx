@@ -111,10 +111,21 @@ const AuthForm = ({ type }: { type: formType }) => {
             />
 
             <Button
-              className="w-full bg-sage-500 hover:bg-sage-600"
+              className={`w-full transition-colors duration-300 ${
+                form.formState.isSubmitting
+                  ? "bg-slate-300 "
+                  : "bg-sage-500 hover:bg-sage-600"
+              }`}
+              disabled={form.formState.isSubmitting}
               type="submit"
             >
-              {type === "signIn" ? "Sign In" : "Sign Up"}
+              {form.formState.isSubmitting
+                ? type === "signIn"
+                  ? "Signing In..."
+                  : "Signing Up..."
+                : type === "signIn"
+                ? "Sign In"
+                : "Sign Up"}
             </Button>
             <div className="body-2 flex justify-center">
               <p className="text-light-100">

@@ -4,7 +4,7 @@ import { convertToAbsolute } from "@/utils/convertToAbsolute";
 import { drawLine } from "@/utils/drawLines";
 import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { throttle } from "lodash";
 import CursorRender from "./CursorRender";
 
@@ -22,7 +22,6 @@ interface CanvasProps {
   color: string;
   isLoading: boolean;
   socket: Socket<DefaultEventsMap, DefaultEventsMap>;
-  divElem: HTMLDivElement | null;
 }
 
 const Canvas = ({
@@ -34,10 +33,10 @@ const Canvas = ({
   color,
   isLoading,
   socket,
-  divElem,
 }: CanvasProps) => {
   const { onMouseDown } = useDraw(createLine, canvasRef);
   const [cursorColor, setCursorColor] = useState<string>("");
+  const divRef = useRef<HTMLDivElement | null>(null);
 
   // Random color for the cursor
   useEffect(() => {
@@ -49,12 +48,10 @@ const Canvas = ({
 
   useEffect(() => {
     if (isLoading) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    if (!userData) return;
 
     socket.on("canvas-state-from-server", (state: string) => {
       const img = new Image();
@@ -95,7 +92,7 @@ const Canvas = ({
       socket.off("draw-line");
       socket.off("canvas-state-from-server");
     };
-  }, [canvasRef, isLoading, userData, roomId, socket]);
+  }, [canvasRef, isLoading, roomId, socket]);
 
   function createLine({ prevPoint, currentPoint, ctx }: Draw) {
     const canvas = canvasRef.current;
@@ -126,21 +123,19 @@ const Canvas = ({
       });
     });
   }
-  console.log("userdata inside canvas", userData);
+
   // Throttle mouse move to avoid spamming socket events
   const throttledMouseMove = useMemo(() => {
     return throttle((e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      console.log("userdata inside mousse move", userData);
+
       if (!userData) return;
 
       const nativeEvent = e.nativeEvent;
       const computedCurrentPoint = computePointInCanvas(nativeEvent, canvas);
 
       if (!computedCurrentPoint) return;
-
-      console.log("computed curent from client", computedCurrentPoint);
 
       socket.emit("user-state", {
         userData,
@@ -159,7 +154,14 @@ const Canvas = ({
   };
 
   return (
-    <div>
+    <div
+      ref={divRef}
+      className="relative shadow-md rounded-lg
+             w-[90vw] h-[90vw] max-w-[750px] max-h-[750px]
+             sm:w-[600px] sm:h-[600px]
+             md:w-[700px] md:h-[700px]
+             lg:w-[750px] lg:h-[750px]"
+    >
       <canvas
         ref={canvasRef}
         width={750}
@@ -169,7 +171,7 @@ const Canvas = ({
         onMouseUp={saveCanvasState}
         className="w-full h-full bg-white rounded-lg cursor-none"
       />
-      <CursorRender socket={socket} divElem={divElem} />
+      <CursorRender socket={socket} divElem={divRef.current} />
     </div>
   );
 };

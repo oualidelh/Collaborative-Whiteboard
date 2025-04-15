@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
 import { Cursor } from "./Cursor";
 import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
+import { useEffect, useState } from "react";
 
 interface CursorRenderProps {
   divElem: HTMLDivElement | null;
@@ -11,8 +11,6 @@ interface CursorRenderProps {
 const CursorRender = ({ divElem, socket }: CursorRenderProps) => {
   const [users, setUsers] = useState<User[]>([]);
 
-  console.log("user update from server", users);
-
   useEffect(() => {
     socket.on("update-users", ({ users: newUsers }) => {
       setUsers(newUsers);
@@ -21,17 +19,22 @@ const CursorRender = ({ divElem, socket }: CursorRenderProps) => {
     return () => {
       socket.off("update-users");
     };
-  }, [socket, users]);
+  }, [socket]);
+
   return (
     <>
       {divElem &&
-        users?.map((user) => {
+        users.map((user) => {
           if (!user.currentPoint) return null;
+
+          const width = divElem.clientWidth;
+          const height = divElem.clientHeight;
+
           return (
             <Cursor
               key={user.userId}
-              x={user.currentPoint.x * divElem.clientWidth}
-              y={user.currentPoint.y * divElem.clientHeight}
+              x={user.currentPoint.x * width}
+              y={user.currentPoint.y * height}
               tool={user.tool}
               cursorColor={user.cursorColor}
             />

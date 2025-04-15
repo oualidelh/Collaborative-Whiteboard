@@ -21,9 +21,12 @@ const HomePage = ({ userData }: HomePageProps) => {
   const [roomInput, setRoomInput] = useState("");
   const [roomName, setRoomName] = useState("");
   const [error, setError] = useState("");
+  const [joinClicked, setJoinClicked] = useState(false);
+  const [createClicked, setCreateClicked] = useState(false);
 
   const createNewRoom = () => {
     if (!userData?.id) return;
+    setCreateClicked(true);
 
     const roomId = uuidv4();
 
@@ -37,11 +40,14 @@ const HomePage = ({ userData }: HomePageProps) => {
     socket.once("room-created", () => {
       const newRoomLink = `/room/${roomId}`;
       navigator.clipboard.writeText(`${window.location.origin}${newRoomLink}`);
-      toast.success("Room Link Copied Successfully!");
+      toast.success("🎉Room Link Copied Successfully! 🔗Share With Friends");
       router.push(newRoomLink);
+      setCreateClicked(false);
     });
   };
   const joinRoom = () => {
+    setJoinClicked(true);
+
     setError("");
     let roomId = roomInput.trim();
 
@@ -63,16 +69,20 @@ const HomePage = ({ userData }: HomePageProps) => {
 
             // Redirect to the room page
             router.push(`/room/${roomId}`);
+            setJoinClicked(false);
           } else {
             setError("Invalid room ID or link.");
+            setJoinClicked(false);
           }
         });
       } else {
         setError("Feild Required!");
+        setJoinClicked(false);
       }
     } catch (error) {
       setError("Please enter a valid room link or ID.");
       console.error("Error joining room:", error);
+      setJoinClicked(false);
     }
   };
 
@@ -111,9 +121,11 @@ const HomePage = ({ userData }: HomePageProps) => {
 
           <Button
             onClick={joinRoom}
-            className="w-full bg-sage-500 hover:bg-sage-600"
+            className={`w-full transition-colors duration-200 ${
+              joinClicked ? "bg-slate-300" : "bg-sage-500 hover:bg-sage-600"
+            }`}
           >
-            Join Room
+            {joinClicked ? "Joining" : "Join Room"}
           </Button>
         </div>
 
@@ -141,9 +153,11 @@ const HomePage = ({ userData }: HomePageProps) => {
           />
           <Button
             onClick={createNewRoom}
-            className="w-full bg-sage-500 hover:bg-sage-600"
+            className={`w-full transition-colors duration-200 ${
+              createClicked ? "bg-slate-300" : "bg-sage-500 hover:bg-sage-600"
+            }`}
           >
-            Create New Room
+            {createClicked ? "Creating" : "Create Room"}
           </Button>
         </div>
       </div>
