@@ -4,7 +4,6 @@ import { GetSocket } from "@/utils/socket";
 import { ToolBar } from "@/components/ToolBar";
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/app/hooks/useUserData";
-// import CursorRender from "./CursorRender";
 import CanvasHeader from "./CanvasHeader";
 import { toast } from "sonner";
 import Canvas from "./canvas";
@@ -16,7 +15,6 @@ const socket = GetSocket();
 
 const RoomPage = ({ roomId }: { roomId: string }) => {
   const { userData } = useUserData();
-
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const divRef = useRef<HTMLDivElement | null>(null);
   const [tool, setTool] = useState<"default" | "pen" | "eraser">("default");
@@ -76,7 +74,10 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   }
 
   return (
-    <div className="flex relative flex-col justify-center items-center gap-4 py-2">
+    <div
+      ref={divRef}
+      className="flex relative flex-col justify-center items-center gap-4 py-2"
+    >
       <CanvasHeader socket={socket} />
       <ToolBar
         selectedTool={tool}
@@ -88,27 +89,16 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
         HandleClearCanvas={HandleClearCanvas}
         leaveRoom={leaveRoom}
       />
-      <div
-        ref={divRef}
-        className="relative shadow-md rounded-lg
-                 w-[90vw] h-[90vw] max-w-[750px] max-h-[750px]
-                 sm:w-[600px] sm:h-[600px]
-                 md:w-[700px] md:h-[700px]
-                 lg:w-[750px] lg:h-[750px]"
-      >
-        <Canvas
-          canvasRef={canvasRef}
-          socket={socket}
-          userData={userData}
-          roomId={roomId}
-          tool={tool}
-          strokeWidth={strokeWidth}
-          color={color}
-          isLoading={isLoading}
-          divElem={divRef.current}
-        />
-        {/* <CursorRender socket={socket} divElem={divRef.current} /> */}
-      </div>
+      <Canvas
+        canvasRef={canvasRef}
+        socket={socket}
+        userData={userData}
+        roomId={roomId}
+        tool={tool}
+        strokeWidth={strokeWidth}
+        color={color}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
