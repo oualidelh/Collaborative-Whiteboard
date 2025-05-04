@@ -1,19 +1,19 @@
-// import { io, Socket } from "socket.io-client";
+// // import { io, Socket } from "socket.io-client";
 
-// const SOCKET_URL = "http://localhost:5000";
+// // const SOCKET_URL = "http://localhost:5000";
 
-// let socket: Socket | null = null;
+// // let socket: Socket | null = null;
 
-// export const GetSocket = (): Socket => {
-//   if (!socket) {
-//     socket = io(SOCKET_URL, {
-//       transports: ["websocket"],
-//     });
-//   }
-//   return socket;
-// };
+// // export const GetSocket = (): Socket => {
+// //   if (!socket) {
+// //     socket = io(SOCKET_URL, {
+// //       transports: ["websocket"],
+// //     });
+// //   }
+// //   return socket;
+// // };
 
-// "https://collaborative-whiteboard-2xlo.onrender.com"
+// // "https://collaborative-whiteboard-2xlo.onrender.com"
 
 // import { io, Socket } from "socket.io-client";
 // import { toast } from "sonner";

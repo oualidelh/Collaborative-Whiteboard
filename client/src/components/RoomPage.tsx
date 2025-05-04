@@ -40,7 +40,7 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const state = canvas.toDataURL();
     localStorage.setItem("canvasState", state);
-    toast.success("Admin Has Cleared The Canvas!");
+    toast.success("Room Creator Has Cleared The Canvas!");
   }, []);
 
   const leaveRoom = useCallback(() => {

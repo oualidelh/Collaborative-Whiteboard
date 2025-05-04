@@ -11,7 +11,7 @@ export function useCanvasSocketEvents(
   useEffect(() => {
     socket.on("clear", clear);
     socket.on("clear-failed", () => {
-      toast.error("Sorry! Only Admins Can Clear The Canvas");
+      toast.error("Sorry! Only Room Creator Can Clear The Canvas");
     });
 
     return () => {

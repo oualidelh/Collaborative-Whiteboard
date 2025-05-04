@@ -111,47 +111,6 @@ io.on("connection", (socket) => {
     socket.emit("room-check-result", { exists: roomExists });
   });
 
-  // socket.on("join-room", ({ roomId, userData }) => {
-  //   if (!userData || !userData.id) {
-  //     console.warn("Invalid userData received");
-  //     return;
-  //   } else {
-  //     console.log("valid user data");
-  //   }
-
-  //   const room = rooms.find((r) => r.roomId === roomId);
-  //   if (room) {
-  //     socket.join(roomId);
-
-  //     socket.to(roomId).emit("user-joined-room", userData?.email);
-
-  //     manageUserRoom({ socket, roomId, userData, users });
-
-  //     console.log(
-  //       "users update to client",
-  //       users.filter((user) => user.room === roomId)
-  //     );
-
-  //     io.to(roomId).emit("update-users", {
-  //       users: users.filter((user) => user.room === roomId),
-  //     });
-
-  //     // Send existing canvas state
-  //     if (canvasStates[roomId]) {
-  //       socket.emit("canvas-state-from-server", canvasStates[roomId]);
-  //     }
-
-  //     io.to(roomId).emit("room-info", {
-  //       roomName: room.roomName,
-  //       users: users.filter((user) => user.room === roomId),
-  //     });
-  //   }
-  //   socket.emit("your-info", {
-  //     room: rooms.filter((room) => room.roomId === roomId),
-  //     user: users.filter((user) => user.userId === userData.id),
-  //   });
-  // });
-
   socket.on("join-room", ({ roomId, userData }) => {
     if (!userData || !userData.id) {
       console.warn("Invalid userData received");
