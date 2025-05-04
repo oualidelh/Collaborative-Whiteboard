@@ -10,6 +10,15 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+// const io = new Server(server, {
+//   cors: {
+//     origin: [
+//       "https://superb-sunshine-b4a864.netlify.app", // ✅ must include https
+//       "http://localhost:3000",
+//     ],
+//     credentials: true,
+//   },
+// });
 
 interface Room {
   userId: string;
@@ -34,6 +43,8 @@ const users: User[] = [];
 const rooms: Room[] = [];
 
 const canvasStates: Record<string, string | null> = {};
+
+let joinedFromHomePage = false;
 
 interface ManageUserRoomArgs {
   socket: any;
@@ -100,6 +111,47 @@ io.on("connection", (socket) => {
     socket.emit("room-check-result", { exists: roomExists });
   });
 
+  // socket.on("join-room", ({ roomId, userData }) => {
+  //   if (!userData || !userData.id) {
+  //     console.warn("Invalid userData received");
+  //     return;
+  //   } else {
+  //     console.log("valid user data");
+  //   }
+
+  //   const room = rooms.find((r) => r.roomId === roomId);
+  //   if (room) {
+  //     socket.join(roomId);
+
+  //     socket.to(roomId).emit("user-joined-room", userData?.email);
+
+  //     manageUserRoom({ socket, roomId, userData, users });
+
+  //     console.log(
+  //       "users update to client",
+  //       users.filter((user) => user.room === roomId)
+  //     );
+
+  //     io.to(roomId).emit("update-users", {
+  //       users: users.filter((user) => user.room === roomId),
+  //     });
+
+  //     // Send existing canvas state
+  //     if (canvasStates[roomId]) {
+  //       socket.emit("canvas-state-from-server", canvasStates[roomId]);
+  //     }
+
+  //     io.to(roomId).emit("room-info", {
+  //       roomName: room.roomName,
+  //       users: users.filter((user) => user.room === roomId),
+  //     });
+  //   }
+  //   socket.emit("your-info", {
+  //     room: rooms.filter((room) => room.roomId === roomId),
+  //     user: users.filter((user) => user.userId === userData.id),
+  //   });
+  // });
+
   socket.on("join-room", ({ roomId, userData }) => {
     if (!userData || !userData.id) {
       console.warn("Invalid userData received");
@@ -112,7 +164,15 @@ io.on("connection", (socket) => {
     if (room) {
       socket.join(roomId);
 
-      socket.to(roomId).emit("user-joined-room", userData?.email);
+      // Check if the user is already in the room to avoid duplicate notifications
+      const existingUser = users.find(
+        (user) => user.userId === userData.id && user.room === roomId
+      );
+
+      // Only emit user-joined-room if this user isn't already in this room
+      if (!existingUser) {
+        socket.to(roomId).emit("user-joined-room", userData?.email);
+      }
 
       manageUserRoom({ socket, roomId, userData, users });
 
@@ -163,6 +223,11 @@ io.on("connection", (socket) => {
     io.to(room).emit("canvas-state-from-server", state);
   });
 
+  socket.on("canvas-style-state", ({ styledState, room }) => {
+    canvasStates[room] = styledState;
+    io.to(room).emit("canvas-state-from-server", styledState);
+  });
+
   socket.on(
     "user-state",
     ({ userData, room, currentPoint, tool, cursorColor }) => {
@@ -196,10 +261,6 @@ io.on("connection", (socket) => {
         });
       }
 
-      console.log(
-        "user that get teh update",
-        users.filter((user) => user.room === room)
-      );
       // Send only users update
 
       io.to(room).emit("update-users", {
