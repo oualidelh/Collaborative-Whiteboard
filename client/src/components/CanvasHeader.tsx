@@ -30,10 +30,11 @@ const CanvasHeader = ({ socket }: CanvHeaderProps) => {
       }
 
       setRegisteredUsers((prevRegistered) => {
-        const newUsers = users.filter(
-          (user) => !prevRegistered.some((reg) => reg.userId === user.userId)
+        const combined = [...prevRegistered, ...users];
+        const deduplicated = Array.from(
+          new Map(combined.map((u) => [u.userId, u])).values()
         );
-        return [...prevRegistered, ...newUsers];
+        return deduplicated;
       });
 
       setUsers(users);

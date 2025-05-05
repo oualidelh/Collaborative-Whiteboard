@@ -24,7 +24,9 @@ const CursorRender = ({ divElem, socket }: CursorRenderProps) => {
   return (
     <>
       {divElem &&
-        users.map((user) => {
+        Array.from(
+          new Map(users.map((user) => [user.userId, user])).values()
+        ).map((user) => {
           if (!user.currentPoint) return null;
 
           const width = divElem.clientWidth;
