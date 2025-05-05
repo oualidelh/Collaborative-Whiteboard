@@ -1,7 +1,9 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Eraser, Trash2, Brush, LogOut } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Slider } from "./ui/slider";
+import { StylePicker } from "@/components/StylePicker";
 
 interface ToolbarProps {
   selectedTool: "default" | "pen" | "eraser";
@@ -12,6 +14,9 @@ interface ToolbarProps {
   onStrokeWidthChange: (width: number) => void;
   HandleClearCanvas: () => void;
   leaveRoom: () => void;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  onStyleApplied?: (styledImageData: string, styleType: string) => void;
+  onLoading?: (isLoading: boolean) => void;
 }
 
 export const ToolBar = ({
@@ -23,9 +28,12 @@ export const ToolBar = ({
   onStrokeWidthChange,
   HandleClearCanvas,
   leaveRoom,
+  canvasRef,
+  onStyleApplied,
+  onLoading,
 }: ToolbarProps) => {
   return (
-    <div className="animate-slideFadeInLeft flex flex-wrap items-center gap-4 p-3 my-4 bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
+    <div className="animate-slideFadeInLeft relative z-20 flex flex-wrap items-center gap-4 p-3 my-4 bg-white/50 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
       <div className="flex items-center gap-2">
         <Tooltip content="Pen Tool (P)">
           <Button
@@ -96,6 +104,14 @@ export const ToolBar = ({
         />
       </div>
       <div className="h-6 w-px bg-cream-200 hidden md:block" />
+      <Tooltip content="Transform Your Draw Into Styles">
+        <StylePicker
+          canvasRef={canvasRef}
+          onStyleApplied={onStyleApplied}
+          onLoading={onLoading}
+        />
+      </Tooltip>
+
       <Tooltip content="Leave Room">
         <Button
           variant={"default"}

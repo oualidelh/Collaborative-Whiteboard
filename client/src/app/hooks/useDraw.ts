@@ -27,16 +27,6 @@ export const useDraw = (
       prevPoint.current = currentPoint;
     };
 
-    // const computePointInCanvas = (e: MouseEvent) => {
-    //   if (!canvas) return;
-
-    //   const rect = canvas.getBoundingClientRect();
-    //   const x = (e.clientX - rect.left) / rect.width;
-    //   const y = (e.clientY - rect.top) / rect.height;
-
-    //   return { x, y };
-    // };
-
     const mouseUpHandler = () => {
       setMouseDown(false);
       prevPoint.current = null;

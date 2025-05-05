@@ -45,9 +45,9 @@ const HomePage = ({ userData }: HomePageProps) => {
       setCreateClicked(false);
     });
   };
+
   const joinRoom = () => {
     setJoinClicked(true);
-
     setError("");
     let roomId = roomInput.trim();
 
@@ -64,8 +64,9 @@ const HomePage = ({ userData }: HomePageProps) => {
         socket.once("room-check-result", (data) => {
           console.log("data", data);
           if (data.exists) {
-            // If the room exists, emit a join-room event
-            socket.emit("join-room", { roomId, userData });
+            // Set a flag in sessionStorage that we're coming from the homepage
+            // This will prevent the RoomPage from checking the room again
+            sessionStorage.setItem("joining-from-homepage", roomId);
 
             // Redirect to the room page
             router.push(`/room/${roomId}`);
@@ -76,7 +77,7 @@ const HomePage = ({ userData }: HomePageProps) => {
           }
         });
       } else {
-        setError("Feild Required!");
+        setError("Field Required!");
         setJoinClicked(false);
       }
     } catch (error) {

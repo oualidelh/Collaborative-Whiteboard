@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Socket } from "socket.io-client";
-import { DefaultEventsMap } from "@socket.io/component-emitter";
 
 interface Room {
   userId: string;
@@ -35,41 +34,63 @@ export function useRoomSocket({
   userData,
   setIsLoading,
 }: {
-  socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+  socket: Socket;
   roomId: string;
   userData: UserData | null;
   setIsLoading: (value: boolean) => void;
 }) {
   const router = useRouter();
 
+  // First useEffect - handle room checking and joining
   useEffect(() => {
     if (!roomId) {
       router.push("/");
       return;
     }
 
-    socket.emit("check-room", roomId);
+    if (!userData) return;
 
-    socket.once("room-check-result", (data) => {
-      if (data.exists) {
-        socket.emit("join-room", { roomId, userData });
-        socket.emit("client-ready", roomId);
-        setIsLoading(false);
-      } else {
-        router.push("/");
-      }
-    });
+    // Check if we're coming from the HomePage (which has already verified the room)
+    const comingFromHomePage =
+      sessionStorage.getItem("joining-from-homepage") === roomId;
+
+    if (comingFromHomePage) {
+      // If coming from homepage, don't check room again, just join
+      console.log("Coming from homepage, skipping room check");
+      sessionStorage.removeItem("joining-from-homepage");
+      socket.emit("join-room", { roomId, userData });
+      socket.emit("client-ready", roomId);
+      setIsLoading(false);
+    } else {
+      // Otherwise do the normal room check
+      socket.emit("check-room", roomId);
+
+      socket.once("room-check-result", (data) => {
+        if (data.exists) {
+          console.log("userdata inside exist ", userData.email);
+          socket.emit("join-room", { roomId, userData });
+          socket.emit("client-ready", roomId);
+          setIsLoading(false);
+        } else {
+          router.push("/");
+        }
+      });
+    }
 
     return () => {
       socket.off("room-check-result");
     };
   }, [roomId, router, userData, socket, setIsLoading]);
 
+  // Second useEffect - handle socket event listeners
   useEffect(() => {
     if (!userData) return;
 
     const handleUserJoin = (email: string) => {
-      toast.info(`${email?.split("@")[0]} has joined the room`);
+      // Only show toast if it's not our own email
+      if (email !== userData.email) {
+        toast.info(`${email?.split("@")[0]} has joined the room`);
+      }
     };
 
     const handleUserLeave = (email: string) => {

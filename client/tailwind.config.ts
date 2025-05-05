@@ -88,6 +88,36 @@ export default {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        glowAI: {
+          "0%": {
+            boxShadow: "0 0 10px #8f00ff, 0 0 20px #8f00ff",
+          },
+          "50%": {
+            boxShadow: "0 0 20px #ff00ff, 0 0 40px #ff00ff",
+          },
+          "100%": {
+            boxShadow: "0 0 10px #8f00ff, 0 0 20px #8f00ff",
+          },
+        },
+        gradientX: {
+          "0%, 100%": {
+            backgroundSize: "200% 200%",
+            backgroundPosition: "left center",
+          },
+          "50%": {
+            backgroundSize: "200% 200%",
+            backgroundPosition: "right center",
+          },
+        },
+        loadingSpiner: {
+          "0%, 100%": { transform: "scale(0.8)" },
+          "50%": { transform: "scale(1.8)" },
+        },
+      },
+      moveGradient: {
+        "0%": { backgroundPosition: "0% 50%" },
+        "50%": { backgroundPosition: "100% 50%" },
+        "100%": { backgroundPosition: "0% 50%" },
       },
       animation: {
         slideFadeInLeft: "slideFadeInLeft 1.5s ease-out",
@@ -95,6 +125,10 @@ export default {
         slideFadeInTop: "slideFadeInTop 1.5s ease-out",
         slideFadeInRight: "slideFadeInRight 1.5s ease-out",
         fadeIn: "fadeIn 1s ease-out",
+        glowAI: "glowAI 2s infinite",
+        gradientX: "gradientX 5s ease infinite",
+        loadingSpiner: "loadingSpiner 3s ease infinite",
+        moveGradient: "moveGradient 1s ease infinite",
       },
     },
   },

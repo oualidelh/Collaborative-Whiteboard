@@ -13,7 +13,7 @@ const NavBar = () => {
     await signOut();
   };
   return (
-    <nav className="fixed z-10 w-full bg-white shadow-sm py-4 px-6 flex justify-between items-center">
+    <nav className="fixed z-50 w-full bg-white shadow-sm py-4 px-6 flex justify-between items-center">
       <div
         onClick={handleHomeReturn}
         className="text-xl font-bold text-primary cursor-pointer hover:text-sage-600 transition-colors"

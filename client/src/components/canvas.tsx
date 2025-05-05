@@ -4,9 +4,16 @@ import { convertToAbsolute } from "@/utils/convertToAbsolute";
 import { drawLine } from "@/utils/drawLines";
 import { Socket } from "socket.io-client";
 import { DefaultEventsMap } from "@socket.io/component-emitter";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { throttle } from "lodash";
 import CursorRender from "./CursorRender";
+import { Sparkles } from "lucide-react";
 
 interface UserData {
   id: string;
@@ -22,6 +29,7 @@ interface CanvasProps {
   color: string;
   isLoading: boolean;
   socket: Socket<DefaultEventsMap, DefaultEventsMap>;
+  isLoadingImg: boolean;
 }
 
 const Canvas = ({
@@ -33,10 +41,27 @@ const Canvas = ({
   color,
   isLoading,
   socket,
+  isLoadingImg,
 }: CanvasProps) => {
   const { onMouseDown } = useDraw(createLine, canvasRef);
   const [cursorColor, setCursorColor] = useState<string>("");
   const divRef = useRef<HTMLDivElement | null>(null);
+
+  const initializeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, [canvasRef]);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    initializeCanvas();
+  }, [canvasRef, initializeCanvas]);
 
   // Random color for the cursor
   useEffect(() => {
@@ -53,12 +78,16 @@ const Canvas = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     socket.on("canvas-state-from-server", (state: string) => {
+      console.log("canvas state ", state);
       const img = new Image();
       img.src = state;
       img.onload = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       };
       localStorage.setItem("canvasState", state);
     });
@@ -156,12 +185,18 @@ const Canvas = ({
   return (
     <div
       ref={divRef}
-      className="relative shadow-md rounded-lg
+      className="relative z-0 shadow-md rounded-lg
              w-[90vw] h-[90vw] max-w-[750px] max-h-[750px]
              sm:w-[600px] sm:h-[600px]
              md:w-[700px] md:h-[700px]
              lg:w-[750px] lg:h-[750px]"
     >
+      {isLoadingImg && (
+        <div className="absolute w-full h-full inset-0 bg-primary/20 bg-opacity-50 flex items-center justify-center backdrop-blur-md z-50 rounded-lg ">
+          <Sparkles className=" animate-pulse text-sage-600" />
+        </div>
+      )}
+
       <canvas
         ref={canvasRef}
         width={750}
@@ -169,7 +204,7 @@ const Canvas = ({
         onMouseMove={throttledMouseMove}
         onMouseDown={onMouseDown}
         onMouseUp={saveCanvasState}
-        className="w-full h-full bg-white rounded-lg cursor-none"
+        className="w-full h-full z-0 bg-white rounded-lg cursor-none"
       />
       <CursorRender socket={socket} divElem={divRef.current} />
     </div>

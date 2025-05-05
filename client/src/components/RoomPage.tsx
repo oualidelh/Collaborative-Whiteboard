@@ -10,6 +10,7 @@ import Canvas from "./canvas";
 import { useReloadPage } from "@/app/hooks/useReloadPage";
 import { useRoomSocket } from "@/app/hooks/useRoomSocket";
 import { useCanvasSocketEvents } from "@/app/hooks/useCanvasSocketEvents";
+import StyledImgModal from "./StyledImgModal";
 
 const socket = GetSocket();
 
@@ -21,6 +22,11 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   const [color, setColor] = useState("#000000");
   const [strokeWidth, setStrokeWidth] = useState(2);
   const [isLoading, setIsLoading] = useState(true);
+  const [styledImage, setStyledImage] = useState<string | null>(null);
+  const [styleType, setStyleType] = useState<string | null>(null);
+  const [isLoadingImg, setIsLoadingImg] = useState(false);
+  const [open, setOpen] = useState(true);
+  console.log("styles image:", styledImage, "and loading img", isLoadingImg);
 
   const router = useRouter();
 
@@ -34,7 +40,7 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const state = canvas.toDataURL();
     localStorage.setItem("canvasState", state);
-    toast.success("Admin Has Cleared The Canvas!");
+    toast.success("Room Creator Has Cleared The Canvas!");
   }, []);
 
   const leaveRoom = useCallback(() => {
@@ -64,6 +70,12 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
   const HandleClearCanvas = () => {
     socket.emit("clear-perm", { roomId, userData });
   };
+  const handleStyleApplied = (styledImageData: string, styleType: string) => {
+    setStyledImage(styledImageData);
+    setStyleType(styleType);
+
+    setOpen(true);
+  };
 
   if (isLoading) {
     return (
@@ -88,6 +100,9 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
         onStrokeWidthChange={setStrokeWidth}
         HandleClearCanvas={HandleClearCanvas}
         leaveRoom={leaveRoom}
+        canvasRef={canvasRef}
+        onStyleApplied={handleStyleApplied}
+        onLoading={setIsLoadingImg}
       />
       <Canvas
         canvasRef={canvasRef}
@@ -98,7 +113,17 @@ const RoomPage = ({ roomId }: { roomId: string }) => {
         strokeWidth={strokeWidth}
         color={color}
         isLoading={isLoading}
+        isLoadingImg={isLoadingImg}
       />
+      {styledImage && !isLoadingImg && open && (
+        <StyledImgModal
+          styledImage={styledImage}
+          styleType={styleType}
+          onClose={() => setOpen(false)}
+          socket={socket}
+          room={roomId}
+        />
+      )}
     </div>
   );
 };
