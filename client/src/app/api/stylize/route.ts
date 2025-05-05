@@ -328,9 +328,9 @@ export async function POST(request: NextRequest) {
 /**
  * Cancel API handler for POST requests
  */
-export async function cancel() {
-  return NextResponse.json({
-    success: true,
-    message: "Stylization canceled",
-  });
-}
+// export async function cancel() {
+//   return NextResponse.json({
+//     success: true,
+//     message: "Stylization canceled",
+//   });
+// }
