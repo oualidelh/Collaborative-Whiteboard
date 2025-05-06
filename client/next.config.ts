@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
     domains: [],
     dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; img-src 'self' data:;", // allow data: URLs
+    contentSecurityPolicy: "default-src 'self'; img-src 'self' data:;",
   },
 };
 
