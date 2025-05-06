@@ -10,7 +10,7 @@ import {
 } from "@/utils/prompt-enhancer";
 
 export const config = {
-  runtime: "edge",
+  runtime: "nodejs",
 };
 
 // Types for API request
